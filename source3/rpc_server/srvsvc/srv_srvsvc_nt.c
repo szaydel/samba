@@ -105,7 +105,8 @@ static int enum_file_fn(struct file_id id,
 
 	/* If the pid was not found delete the entry from connections.tdb */
 
-	if ( !process_exists(e->pid) ) {
+	if (lp_parm_bool(-1, "srvsvc", "file enum check stale", true) &&
+	    !process_exists(e->pid) ) {
 		return 0;
 	}
 
