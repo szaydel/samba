@@ -184,16 +184,18 @@ static WERROR net_enum_files(TALLOC_CTX *ctx,
 		.ctx = ctx, .username = username, .ctr3 = *ctr3,
 	};
 	uint32_t i;
+	bool count_file_locks =
+		lp_parm_bool(-1, "srvsvc", "file enum count locks", true);
 
 	share_entry_forall_read(enum_file_fn, (void *)&f_enum_cnt );
 
 	*ctr3 = f_enum_cnt.ctr3;
 
 	/* need to count the number of locks on a file */
-
 	for (i=0; i<(*ctr3)->count; i++) {
 		struct files_struct *fsp = NULL;
 		struct byte_range_lock *brl = NULL;
+		unsigned int num_locks = 0;
 
 		fsp = talloc_zero(talloc_tos(), struct files_struct);
 		if (fsp == NULL) {
@@ -201,13 +203,16 @@ static WERROR net_enum_files(TALLOC_CTX *ctx,
 		}
 		fsp->file_id = f_enum_cnt.fids[i];
 
-		brl = brl_get_locks_readonly(fsp);
-		if (brl == NULL) {
-			continue;
+		if (count_file_locks) {
+			brl = brl_get_locks_readonly(fsp);
+			if (brl != NULL) {
+				num_locks = brl_num_locks(brl);
+				TALLOC_FREE(brl);
+			}
 		}
 
-		(*ctr3)->array[i].num_locks = brl_num_locks(brl);
-		TALLOC_FREE(brl);
+		(*ctr3)->array[i].num_locks = num_locks;
+
 		TALLOC_FREE(fsp);
 	}
 
