@@ -238,7 +238,11 @@ enum ndr_err_code ndr_push_dns_string_list(struct ndr_push *ndr,
 
 	while (s && *s) {
 		enum ndr_err_code ndr_err;
-		char *compname;
+		/*
+		 * MAX_COMP_LEN + 1 for the length byte, + 1 extra for the
+		 * NBT trailing-dot case where complen is incremented to 64.
+		 */
+		uint8_t compname[MAX_COMP_LEN + 2] = {0, };
 		size_t complen;
 		uint32_t offset;
 
@@ -293,12 +297,6 @@ enum ndr_err_code ndr_push_dns_string_list(struct ndr_push *ndr,
 			complen++;
 		}
 
-		compname = talloc_asprintf(ndr, "%c%*.*s",
-						(unsigned char)complen,
-						(unsigned char)complen,
-						(unsigned char)complen, s);
-		NDR_ERR_HAVE_NO_MEMORY(compname);
-
 		/* remember the current component + the rest of the string
 		 * so it can be reused later
 		 */
@@ -308,9 +306,14 @@ enum ndr_err_code ndr_push_dns_string_list(struct ndr_push *ndr,
 		}
 
 		/* push just this component into the blob */
-		NDR_CHECK(ndr_push_bytes(ndr, (const uint8_t *)compname,
-					 complen+1));
-		talloc_free(compname);
+		if (unlikely(complen > MAX_COMP_LEN)) {
+			return ndr_push_error(ndr, NDR_ERR_STRING,
+					      "component length is %zu, should be < %zu",
+					      complen, sizeof(compname));
+		}
+		compname[0] = complen;
+		memcpy(compname + 1, s, complen);
+		NDR_CHECK(ndr_push_bytes(ndr, compname, complen + 1));
 
 		s += complen;
 		if (*s == '.') {
