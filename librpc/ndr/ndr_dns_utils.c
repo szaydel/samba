@@ -2,6 +2,117 @@
 #include "../librpc/ndr/libndr.h"
 #include "ndr_dns_utils.h"
 
+/* don't allow an unlimited number of name components. The string must be less
+   than 255, with at least one character between dots, so 128 components is
+   plenty.
+ */
+#define MAX_COMPONENTS 128
+
+/*
+  pull one component of a dns_string
+*/
+static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
+					    uint8_t **component,
+					    uint32_t *offset,
+					    uint32_t *max_offset)
+{
+	uint8_t len;
+	unsigned int loops = 0;
+	while (loops < 5) {
+		if (*offset >= ndr->data_size) {
+			return ndr_pull_error(ndr, NDR_ERR_STRING,
+					"BAD DNS NAME component, bad offset");
+		}
+		len = ndr->data[*offset];
+		if (len == 0) {
+			*offset += 1;
+			*max_offset = MAX(*max_offset, *offset);
+			*component = NULL;
+			return NDR_ERR_SUCCESS;
+		}
+		if ((len & 0xC0) == 0xC0) {
+			/* its a label pointer */
+			if (1 + *offset >= ndr->data_size) {
+				return ndr_pull_error(ndr, NDR_ERR_STRING,
+						"BAD DNS NAME component, " \
+						"bad label offset");
+			}
+			*max_offset = MAX(*max_offset, *offset + 2);
+			*offset = ((len&0x3F)<<8) | ndr->data[1 + *offset];
+			*max_offset = MAX(*max_offset, *offset);
+			loops++;
+			continue;
+		}
+		if ((len & 0xC0) != 0) {
+			/* its a reserved length field */
+			return ndr_pull_error(ndr, NDR_ERR_STRING,
+					      "BAD DNS NAME component, " \
+					      "reserved length field: 0x%02x",
+					      (len &0xC));
+		}
+		if (*offset + len + 1 > ndr->data_size) {
+			return ndr_pull_error(ndr, NDR_ERR_STRING,
+					      "BAD DNS NAME component, "\
+					      "length too long");
+		}
+		*component = (uint8_t*)talloc_strndup(ndr,
+				(const char *)&ndr->data[1 + *offset], len);
+		NDR_ERR_HAVE_NO_MEMORY(*component);
+		*offset += len + 1;
+		*max_offset = MAX(*max_offset, *offset);
+		return NDR_ERR_SUCCESS;
+	}
+
+	/* too many pointers */
+	return ndr_pull_error(ndr, NDR_ERR_STRING,
+			      "BAD DNS NAME component, too many pointers");
+}
+
+/**
+  pull a dns_string from the wire
+*/
+enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
+					   ndr_flags_type ndr_flags,
+					   const char **s)
+{
+	uint32_t offset = ndr->offset;
+	uint32_t max_offset = offset;
+	unsigned num_components;
+	char *name;
+
+	if (!(ndr_flags & NDR_SCALARS)) {
+		return NDR_ERR_SUCCESS;
+	}
+
+	name = talloc_strdup(ndr->current_mem_ctx, "");
+
+	/* break up name into a list of components */
+	for (num_components=0; num_components<MAX_COMPONENTS;
+	     num_components++) {
+		uint8_t *component = NULL;
+		NDR_CHECK(ndr_pull_component(ndr, &component, &offset,
+					     &max_offset));
+		if (component == NULL) break;
+		if (num_components > 0) {
+			name = talloc_asprintf_append_buffer(name, ".%s",
+							     component);
+		} else {
+			name = talloc_asprintf_append_buffer(name, "%s",
+							     component);
+		}
+		NDR_ERR_HAVE_NO_MEMORY(name);
+	}
+	if (num_components == MAX_COMPONENTS) {
+		return ndr_pull_error(ndr, NDR_ERR_STRING,
+				      "BAD DNS NAME too many components");
+	}
+
+	(*s) = name;
+	ndr->offset = max_offset;
+
+	return NDR_ERR_SUCCESS;
+}
+
 
 /**
   push a dns/nbt string list to the wire
