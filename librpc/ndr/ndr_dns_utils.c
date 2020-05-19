@@ -9,19 +9,22 @@
 #define MAX_COMPONENTS 128
 
 /*
-  pull one component of a dns_string
+  pull one component of a dns/nbt string
 */
 static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
+					    TALLOC_CTX *mem_ctx,
 					    uint8_t **component,
 					    uint32_t *offset,
-					    uint32_t *max_offset)
+					    uint32_t *max_offset,
+					    const char *err_name)
 {
 	uint8_t len;
 	unsigned int loops = 0;
 	while (loops < 5) {
 		if (*offset >= ndr->data_size) {
 			return ndr_pull_error(ndr, NDR_ERR_STRING,
-					"BAD DNS NAME component, bad offset");
+					    "BAD %s NAME component, bad offset",
+					    err_name);
 		}
 		len = ndr->data[*offset];
 		if (len == 0) {
@@ -34,8 +37,9 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 			/* its a label pointer */
 			if (1 + *offset >= ndr->data_size) {
 				return ndr_pull_error(ndr, NDR_ERR_STRING,
-						"BAD DNS NAME component, " \
-						"bad label offset");
+						     "BAD %s NAME component, " \
+						     "bad label offset",
+						     err_name);
 			}
 			*max_offset = MAX(*max_offset, *offset + 2);
 			*offset = ((len&0x3F)<<8) | ndr->data[1 + *offset];
@@ -46,16 +50,17 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 		if ((len & 0xC0) != 0) {
 			/* its a reserved length field */
 			return ndr_pull_error(ndr, NDR_ERR_STRING,
-					      "BAD DNS NAME component, " \
+					      "BAD %s NAME component, " \
 					      "reserved length field: 0x%02x",
-					      (len &0xC));
+					      err_name, (len &0xC));
 		}
 		if (*offset + len + 1 > ndr->data_size) {
 			return ndr_pull_error(ndr, NDR_ERR_STRING,
-					      "BAD DNS NAME component, "\
-					      "length too long");
+					      "BAD %s NAME component, "\
+					      "length too long",
+					      err_name);
 		}
-		*component = (uint8_t*)talloc_strndup(ndr,
+		*component = (uint8_t*)talloc_strndup(mem_ctx,
 				(const char *)&ndr->data[1 + *offset], len);
 		NDR_ERR_HAVE_NO_MEMORY(*component);
 		*offset += len + 1;
@@ -65,20 +70,32 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 
 	/* too many pointers */
 	return ndr_pull_error(ndr, NDR_ERR_STRING,
-			      "BAD DNS NAME component, too many pointers");
+			      "BAD %s NAME component, too many pointers",
+			      err_name);
 }
 
 /**
-  pull a dns_string from the wire
+  pull a dns/nbt string from the wire
 */
 enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 					   ndr_flags_type ndr_flags,
-					   const char **s)
+					   const char **s,
+					   bool is_nbt)
 {
 	uint32_t offset = ndr->offset;
 	uint32_t max_offset = offset;
 	unsigned num_components;
 	char *name;
+	const char *err_name = NULL;
+	TALLOC_CTX *mem_ctx = NULL;
+
+	if (is_nbt) {
+		err_name = "NBT";
+		mem_ctx = ndr->current_mem_ctx;
+	} else {
+		err_name = "DNS";
+		mem_ctx = ndr;
+	}
 
 	if (!(ndr_flags & NDR_SCALARS)) {
 		return NDR_ERR_SUCCESS;
@@ -87,12 +104,18 @@ enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 	name = talloc_strdup(ndr->current_mem_ctx, "");
 
 	/* break up name into a list of components */
-	for (num_components=0; num_components<MAX_COMPONENTS;
+	for (num_components = 0;
+	     num_components < MAX_COMPONENTS;
 	     num_components++) {
 		uint8_t *component = NULL;
-		NDR_CHECK(ndr_pull_component(ndr, &component, &offset,
-					     &max_offset));
-		if (component == NULL) break;
+		NDR_CHECK(ndr_pull_component(ndr,
+					     mem_ctx,
+					     &component, &offset,
+					     &max_offset,
+					     err_name));
+		if (component == NULL) {
+			break;
+		}
 		if (num_components > 0) {
 			name = talloc_asprintf_append_buffer(name, ".%s",
 							     component);
@@ -104,7 +127,8 @@ enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 	}
 	if (num_components == MAX_COMPONENTS) {
 		return ndr_pull_error(ndr, NDR_ERR_STRING,
-				      "BAD DNS NAME too many components");
+				      "BAD %s NAME too many components",
+				      err_name);
 	}
 
 	(*s) = name;

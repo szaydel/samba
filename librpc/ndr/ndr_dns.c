@@ -55,7 +55,8 @@ _PUBLIC_ enum ndr_err_code ndr_pull_dns_string(struct ndr_pull *ndr,
 {
 	return ndr_pull_dns_string_list(ndr,
 					ndr_flags,
-					s);
+					s,
+					false);
 }
 
 
