@@ -8,6 +8,37 @@
  */
 #define MAX_COMPONENTS 128
 
+
+
+/*
+ * Copy a DNS component. If it is "good" as a DNS component, return true,
+ * otherwise return false. In either case the whole copy is performed.
+ */
+static bool dns_component_copy(uint8_t *dest, uint8_t *src, size_t len)
+{
+	size_t i;
+	bool ret = true;
+	for (i = 0; i < len; i++) {
+		uint8_t c = src[i];
+		dest[i] = c;
+		if (c == '\0') {
+			ret = false;
+		} else if (c == '.' && i != len - 1) {
+			/*
+			 * As a special case, for NBT addresses that are also
+			 * usernames, we allow a dot as the last character.
+			 *
+			 * This will not be treated symmetrically on the push
+			 * side unless the component is the last component of
+			 * an NBT name. In other cases (DNS, non-final NBT)
+			 * the trailing dot would truncate the address on push.
+			 */
+			ret = false;
+		}
+	}
+	return ret;
+}
+
 /*
   pull one component of a dns/nbt string
 */
@@ -20,6 +51,7 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 {
 	uint8_t len;
 	unsigned int loops = 0;
+	bool comp_is_valid;
 	*component_len = 0;
 	while (loops < 5) {
 		if (*offset >= ndr->data_size) {
@@ -61,7 +93,16 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 					      "length too long",
 					      err_name);
 		}
-		memcpy(component, &ndr->data[1 + *offset], len);
+
+		comp_is_valid = dns_component_copy(component,
+						   &ndr->data[1 + *offset],
+						   len);
+		if (! comp_is_valid) {
+			return ndr_pull_error(ndr, NDR_ERR_STRING,
+					      "BAD %s NAME component, "\
+					      "undesirable characters",
+					      err_name);
+		}
 		*component_len = len;
 		*offset += len + 1;
 		*max_offset = MAX(*max_offset, *offset);
