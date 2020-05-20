@@ -12,7 +12,6 @@
   pull one component of a dns/nbt string
 */
 static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
-					    TALLOC_CTX *mem_ctx,
 					    uint8_t **component,
 					    uint32_t *offset,
 					    uint32_t *max_offset,
@@ -60,7 +59,7 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 					      "length too long",
 					      err_name);
 		}
-		*component = (uint8_t*)talloc_strndup(mem_ctx,
+		*component = (uint8_t*)talloc_strndup(ndr,
 				(const char *)&ndr->data[1 + *offset], len);
 		NDR_ERR_HAVE_NO_MEMORY(*component);
 		*offset += len + 1;
@@ -87,14 +86,11 @@ enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 	unsigned num_components;
 	char *name;
 	const char *err_name = NULL;
-	TALLOC_CTX *mem_ctx = NULL;
 
 	if (is_nbt) {
 		err_name = "NBT";
-		mem_ctx = ndr->current_mem_ctx;
 	} else {
 		err_name = "DNS";
-		mem_ctx = ndr;
 	}
 
 	if (!(ndr_flags & NDR_SCALARS)) {
@@ -109,7 +105,6 @@ enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 	     num_components++) {
 		uint8_t *component = NULL;
 		NDR_CHECK(ndr_pull_component(ndr,
-					     mem_ctx,
 					     &component, &offset,
 					     &max_offset,
 					     err_name));
@@ -124,6 +119,7 @@ enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 							     component);
 		}
 		NDR_ERR_HAVE_NO_MEMORY(name);
+		TALLOC_FREE(component);
 	}
 	if (num_components == MAX_COMPONENTS) {
 		return ndr_pull_error(ndr, NDR_ERR_STRING,
