@@ -12,13 +12,15 @@
   pull one component of a dns/nbt string
 */
 static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
-					    uint8_t **component,
+					    uint8_t *component,
+					    size_t *component_len,
 					    uint32_t *offset,
 					    uint32_t *max_offset,
 					    const char *err_name)
 {
 	uint8_t len;
 	unsigned int loops = 0;
+	*component_len = 0;
 	while (loops < 5) {
 		if (*offset >= ndr->data_size) {
 			return ndr_pull_error(ndr, NDR_ERR_STRING,
@@ -29,7 +31,6 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 		if (len == 0) {
 			*offset += 1;
 			*max_offset = MAX(*max_offset, *offset);
-			*component = NULL;
 			return NDR_ERR_SUCCESS;
 		}
 		if ((len & 0xC0) == 0xC0) {
@@ -53,15 +54,15 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 					      "reserved length field: 0x%02x",
 					      err_name, (len &0xC));
 		}
-		if (*offset + len + 1 > ndr->data_size) {
+		if (*offset + len + 1 > ndr->data_size ||
+		    len > 63 /* impossible!, but we live in fear */ ) {
 			return ndr_pull_error(ndr, NDR_ERR_STRING,
 					      "BAD %s NAME component, "\
 					      "length too long",
 					      err_name);
 		}
-		*component = (uint8_t*)talloc_strndup(ndr,
-				(const char *)&ndr->data[1 + *offset], len);
-		NDR_ERR_HAVE_NO_MEMORY(*component);
+		memcpy(component, &ndr->data[1 + *offset], len);
+		*component_len = len;
 		*offset += len + 1;
 		*max_offset = MAX(*max_offset, *offset);
 		return NDR_ERR_SUCCESS;
@@ -85,48 +86,71 @@ enum ndr_err_code ndr_pull_dns_string_list(struct ndr_pull *ndr,
 	uint32_t max_offset = offset;
 	unsigned num_components;
 	char *name;
+	size_t name_len;
 	const char *err_name = NULL;
+	size_t max_len;
 
+	/*
+	 * maximum *wire* size is 255, per RFC1035, but we compare to 253
+	 * because a) there is one more length field than there are separating
+	 * dots, and b) there is a final zero-length root node, not
+	 * represented in dotted form.
+	 *
+	 * For NBT we compare to 272 because that is roughly what Windows
+	 * 2012r2 does (contra RFC 1002).
+	 */
 	if (is_nbt) {
 		err_name = "NBT";
+		max_len = 272;
 	} else {
 		err_name = "DNS";
+		max_len = 253;
 	}
 
 	if (!(ndr_flags & NDR_SCALARS)) {
 		return NDR_ERR_SUCCESS;
 	}
 
-	name = talloc_strdup(ndr->current_mem_ctx, "");
+	name = talloc_array(ndr->current_mem_ctx, char, max_len + 2);
+	NDR_ERR_HAVE_NO_MEMORY(name);
+	name_len = 0;
 
-	/* break up name into a list of components */
 	for (num_components = 0;
 	     num_components < MAX_COMPONENTS;
 	     num_components++) {
-		uint8_t *component = NULL;
+		uint8_t component[64] = {0, };
+		size_t component_len = 0;
 		NDR_CHECK(ndr_pull_component(ndr,
-					     &component, &offset,
+					     component,
+					     &component_len,
+					     &offset,
 					     &max_offset,
 					     err_name));
-		if (component == NULL) {
+		if (component_len == 0) {
 			break;
 		}
-		if (num_components > 0) {
-			name = talloc_asprintf_append_buffer(name, ".%s",
-							     component);
-		} else {
-			name = talloc_asprintf_append_buffer(name, "%s",
-							     component);
+		if (name_len + component_len + 1 > max_len) {
+			return ndr_pull_error(ndr, NDR_ERR_STRING,
+					      "BAD %s NAME too long",
+					      err_name);
 		}
-		NDR_ERR_HAVE_NO_MEMORY(name);
-		TALLOC_FREE(component);
+		if (name_len > 0) {
+			name[name_len] = '.';
+			name_len++;
+		}
+
+		memcpy(name + name_len, component, component_len);
+		name_len += component_len;
 	}
+
 	if (num_components == MAX_COMPONENTS) {
+		/* We should never reach this */
 		return ndr_pull_error(ndr, NDR_ERR_STRING,
 				      "BAD %s NAME too many components",
 				      err_name);
 	}
 
+	name[name_len] = '\0';
 	(*s) = name;
 	ndr->offset = max_offset;
 
