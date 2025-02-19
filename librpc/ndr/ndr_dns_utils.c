@@ -7,7 +7,7 @@
    plenty.
  */
 #define MAX_COMPONENTS 128
-
+#define MAX_COMP_LEN    63
 
 
 /*
@@ -87,7 +87,7 @@ static enum ndr_err_code ndr_pull_component(struct ndr_pull *ndr,
 					      err_name, (len &0xC));
 		}
 		if (*offset + len + 1 > ndr->data_size ||
-		    len > 63 /* impossible!, but we live in fear */ ) {
+		    len > MAX_COMP_LEN /* impossible!, but we live in fear */ ) {
 			return ndr_pull_error(ndr, NDR_ERR_STRING,
 					      "BAD %s NAME component, "\
 					      "length too long",
@@ -272,12 +272,11 @@ enum ndr_err_code ndr_push_dns_string_list(struct ndr_push *ndr,
 		complen = strcspn(s, ".");
 
 		/* the length must fit into 6 bits (i.e. <= 63) */
-		if (complen > 0x3F) {
+		if (complen > MAX_COMP_LEN) {
 			return ndr_push_error(ndr, NDR_ERR_STRING,
-					      "component length %zu[%08zX] > " \
-					      "0x0000003F",
+					      "component length %zu > %u",
 					      complen,
-					      complen);
+					      MAX_COMP_LEN);
 		}
 
 		if (complen == 0 && s[complen] == '.') {
