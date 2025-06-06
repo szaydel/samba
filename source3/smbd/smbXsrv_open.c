@@ -35,6 +35,7 @@
 #include "source3/include/util_tdb.h"
 #include "lib/util/idtree_random.h"
 #include "lib/util/time_basic.h"
+#include "../librpc/gen_ndr/ndr_smb2_lease_struct.h"
 
 struct smbXsrv_open_table {
 	struct {
@@ -282,10 +283,10 @@ static NTSTATUS smbXsrv_open_global_verify_record(
 	*_global0 = global0;
 
 	if (server_id_is_disconnected(&global0->server_id)) {
-		return NT_STATUS_OK;
+		return NT_STATUS_REMOTE_DISCONNECT;
 	}
 	if (serverid_exists(&global0->server_id)) {
-		return NT_STATUS_OK;
+		return NT_STATUS_OBJECTID_EXISTS;
 	}
 
 	DBG_WARNING("smbd %s did not clean up record %s\n",
@@ -367,7 +368,7 @@ static void smbXsrv_open_global_allocate_fn(
 	state->status = smbXsrv_open_global_verify_record(
 		key, oldval, talloc_tos(), &tmp_global0);
 
-	if (NT_STATUS_IS_OK(state->status)) {
+	if (!NT_STATUS_EQUAL(state->status, NT_STATUS_NOT_FOUND)) {
 		/*
 		 * Found an existing record
 		 */
@@ -1159,7 +1160,9 @@ NTSTATUS smb2srv_open_lookup_replay_cache(struct smbXsrv_connection *conn,
 
 struct smb2srv_open_recreate_state {
 	struct smbXsrv_open *op;
+	const struct GUID *client_guid;
 	const struct GUID *create_guid;
+	const struct smb2_lease_key *lease_key;
 	struct security_token *current_token;
 	struct server_id me;
 
@@ -1172,10 +1175,11 @@ static void smb2srv_open_recreate_fn(
 	struct smb2srv_open_recreate_state *state = private_data;
 	TDB_DATA key = dbwrap_record_get_key(rec);
 	struct smbXsrv_open_global0 *global = NULL;
+	struct GUID_txt_buf buf1, buf2;
 
 	state->status = smbXsrv_open_global_verify_record(
 		key, oldval, state->op, &state->op->global);
-	if (!NT_STATUS_IS_OK(state->status)) {
+	if (!NT_STATUS_EQUAL(state->status, NT_STATUS_REMOTE_DISCONNECT)) {
 		DBG_WARNING("smbXsrv_open_global_verify_record for %s "
 			    "failed: %s\n",
 			    tdb_data_dbg(key),
@@ -1183,6 +1187,16 @@ static void smb2srv_open_recreate_fn(
 		goto not_found;
 	}
 	global = state->op->global;
+
+	if (state->lease_key != NULL &&
+	    !GUID_equal(&global->client_guid, state->client_guid))
+	{
+		DBG_NOTICE("client guid: %s != %s in %s\n",
+			   GUID_buf_string(&global->client_guid, &buf1),
+			   GUID_buf_string(state->client_guid, &buf2),
+			   tdb_data_dbg(key));
+		goto not_found;
+	}
 
 	/*
 	 * If the provided create_guid is NULL, this means that
@@ -1192,7 +1206,6 @@ static void smb2srv_open_recreate_fn(
 	 */
 	if ((state->create_guid != NULL) &&
 	    !GUID_equal(&global->create_guid, state->create_guid)) {
-		struct GUID_txt_buf buf1, buf2;
 		DBG_NOTICE("%s != %s in %s\n",
 			   GUID_buf_string(&global->create_guid, &buf1),
 			   GUID_buf_string(state->create_guid, &buf2),
@@ -1206,7 +1219,8 @@ static void smb2srv_open_recreate_fn(
 		DBG_NOTICE("global owner %s not in our token in %s\n",
 			   dom_sid_str_buf(&global->open_owner, &buf),
 			   tdb_data_dbg(key));
-		goto not_found;
+		state->status = NT_STATUS_ACCESS_DENIED;
+		return;
 	}
 
 	if (!global->durable) {
@@ -1237,12 +1251,15 @@ NTSTATUS smb2srv_open_recreate(struct smbXsrv_connection *conn,
 			       struct auth_session_info *session_info,
 			       uint64_t persistent_id,
 			       const struct GUID *create_guid,
+			       const struct smb2_lease_key *lease_key,
 			       NTTIME now,
 			       struct smbXsrv_open **_open)
 {
 	struct smbXsrv_open_table *table = conn->client->open_table;
 	struct smb2srv_open_recreate_state state = {
+		.client_guid = &conn->client->global->client_guid,
 		.create_guid = create_guid,
+		.lease_key = lease_key,
 		.me = messaging_server_id(conn->client->msg_ctx),
 	};
 	struct smbXsrv_open_global_key_buf key_buf;
@@ -1459,7 +1476,7 @@ static void smbXsrv_open_cleanup_fn(
 	}
 
 	if (!delete_open) {
-		state->status = NT_STATUS_OK;
+		state->status = NT_STATUS_CANNOT_DELETE;
 		return;
 	}
 do_delete:
@@ -1478,6 +1495,7 @@ do_delete:
 		  "deleted record from %s\n",
 		  state->global_id,
 		  dbwrap_name(dbwrap_record_get_db(rec)));
+	state->status = NT_STATUS_OK;
 }
 
 NTSTATUS smbXsrv_open_cleanup(uint64_t persistent_id)
