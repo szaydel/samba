@@ -1879,17 +1879,6 @@ static bool is_same_lease(const files_struct *fsp,
 				&e->lease_key);
 }
 
-static bool file_has_brlocks(files_struct *fsp)
-{
-	struct byte_range_lock *br_lck;
-
-	br_lck = brl_get_locks_readonly(fsp);
-	if (!br_lck)
-		return false;
-
-	return (brl_num_locks(br_lck) > 0);
-}
-
 struct fsp_lease *find_fsp_lease(struct files_struct *new_fsp,
 				 const struct smb2_lease_key *key,
 				 uint32_t current_state,
@@ -2280,7 +2269,7 @@ static bool delay_for_oplock_fn(
 
 	break_to = e_lease_type & ~state->delay_mask;
 
-	if (state->will_overwrite) {
+	if (state->will_overwrite && !(state->delay_mask & SMB2_LEASE_HANDLE)) {
 		break_to &= ~(SMB2_LEASE_HANDLE|SMB2_LEASE_READ);
 	}
 
@@ -2299,7 +2288,7 @@ static bool delay_for_oplock_fn(
 		return false;
 	}
 
-	if (state->will_overwrite) {
+	if (state->will_overwrite && !(state->delay_mask & SMB2_LEASE_HANDLE)) {
 		/*
 		 * If we break anyway break to NONE directly.
 		 * Otherwise vfs_set_filelen() will trigger the
@@ -2500,7 +2489,7 @@ grant:
 	if (lp_locking(fsp->conn->params) && file_has_brlocks(fsp)) {
 		DBG_DEBUG("file %s has byte range locks\n",
 			  fsp_str_dbg(fsp));
-		granted &= ~SMB2_LEASE_READ;
+		granted &= ~(SMB2_LEASE_READ | SMB2_LEASE_HANDLE);
 	}
 
 	if (state.disallow_write_lease) {
@@ -4074,6 +4063,15 @@ static NTSTATUS open_file_ntcreate(connection_struct *conn,
 	} else {
 		if (flags & O_TRUNC) {
 			info = FILE_WAS_OVERWRITTEN;
+			/*
+			 * We did not truncate the file yet, we're doing that
+			 * explicitly with SMB_VFS_FTRUNCATE() below under the
+			 * sharemode glock. For correct handling of RH leases in
+			 * the presence of byterange locks, the leases code
+			 * needs the "correct" filesize which should be 0 at
+			 * this place if we did the O_TRUNC at open() time.
+			 */
+			fsp->fsp_name->st.st_ex_size = 0;
 		} else {
 			info = FILE_WAS_OPENED;
 		}
