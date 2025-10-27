@@ -783,14 +783,18 @@ def build(bld):
     bld.SAMBA_GENERATOR('ctdb-onnode',
                         source='tools/onnode',
                         target='onnode',
-                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline))
+                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline),
+                        symlink=True,
+                        chmod=MODE_755)
     bld.INSTALL_FILES('${BINDIR}', 'onnode',
                       destname='onnode', chmod=MODE_755)
 
     bld.SAMBA_GENERATOR('ctdb-diagnostics',
                         source='tools/ctdb_diagnostics',
                         target='ctdb_diagnostics',
-                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline))
+                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline),
+                        symlink=True,
+                        chmod=MODE_755)
     bld.INSTALL_FILES('${BINDIR}', 'ctdb_diagnostics',
                       destname='ctdb_diagnostics', chmod=MODE_755)
 
@@ -798,28 +802,36 @@ def build(bld):
         bld.SAMBA_GENERATOR('ctdb-etcd-lock',
                             source='utils/etcd/ctdb_etcd_lock',
                             target='ctdb_etcd_lock',
-                            rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline))
+                            rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline),
+                            symlink=True,
+                            chmod=MODE_755)
         bld.INSTALL_FILES('${CTDB_HELPER_BINDIR}', 'ctdb_etcd_lock',
                           destname='ctdb_etcd_lock', chmod=MODE_744)
 
     bld.SAMBA_GENERATOR('ctdb-natgw',
                         source='tools/ctdb_natgw',
                         target='ctdb_natgw',
-                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline))
+                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline),
+                        symlink=True,
+                        chmod=MODE_755)
     bld.INSTALL_FILES('${CTDB_HELPER_BINDIR}', 'ctdb_natgw',
                       destname='ctdb_natgw', chmod=MODE_755)
 
     bld.SAMBA_GENERATOR('ctdb-lvs',
                         source='tools/ctdb_lvs',
                         target='ctdb_lvs',
-                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline))
+                        rule='sed %s ${SRC} > ${TGT}' % (sed_cmdline),
+                        symlink=True,
+                        chmod=MODE_755)
     bld.INSTALL_FILES('${CTDB_HELPER_BINDIR}', 'ctdb_lvs',
                       destname='ctdb_lvs', chmod=MODE_755)
 
     bld.SAMBA_GENERATOR("ctdb-statd-callout-helper",
                         source="tools/statd_callout_helper",
                         target="statd_callout_helper",
-                        rule=f"sed {sed_cmdline} ${{SRC}} > ${{TGT}}")
+                        rule=f"sed {sed_cmdline} ${{SRC}} > ${{TGT}}",
+                        symlink=True,
+                        chmod=MODE_755)
     bld.INSTALL_FILES("${CTDB_HELPER_BINDIR}", "statd_callout_helper",
                       destname="statd_callout_helper", chmod=MODE_755)
 
@@ -1223,7 +1235,8 @@ def build(bld):
                         source='tests/run_tests.sh',
                         target='ctdb_run_tests.sh',
                         rule='sed -e "%s" -e "%s" ${SRC} > ${TGT}' % (
-                             sed_expr1, sed_expr2))
+                             sed_expr1, sed_expr2),
+                        chmod=MODE_755)
     bld.INSTALL_FILES('${BINDIR}', 'ctdb_run_tests.sh',
                       destname='ctdb_run_tests', chmod=MODE_755)
     bld.symlink_as(os.path.join(bld.env.BINDIR, 'ctdb_run_cluster_tests'),
@@ -1233,7 +1246,8 @@ def build(bld):
                         source='tests/local_daemons.sh',
                         target='ctdb_local_daemons.sh',
                         rule='sed -e "%s" -e "%s" ${SRC} > ${TGT}' % (
-                             sed_expr1, sed_expr2))
+                             sed_expr1, sed_expr2),
+                        chmod=MODE_755)
     bld.INSTALL_FILES('${BINDIR}', 'ctdb_local_daemons.sh',
                       destname='ctdb_local_daemons', chmod=MODE_755)
 
