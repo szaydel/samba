@@ -80,7 +80,6 @@ setup_natgw()
 {
 	debug "Setting up NAT gateway"
 
-	export CTDB_NATGW_HELPER="${CTDB_SCRIPTS_TOOLS_HELPER_DIR}/ctdb_natgw"
 	export CTDB_NATGW_NODES="${CTDB_BASE}/natgw_nodes"
 
 	cat >"$CTDB_NATGW_NODES"
@@ -90,7 +89,6 @@ setup_lvs()
 {
 	debug "Setting up LVS"
 
-	export CTDB_LVS_HELPER="${CTDB_SCRIPTS_TOOLS_HELPER_DIR}/ctdb_lvs"
 	export CTDB_LVS_NODES="${CTDB_BASE}/lvs_nodes"
 
 	cat >"$CTDB_LVS_NODES"
