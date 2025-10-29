@@ -17,8 +17,6 @@ if ! $CTDB_TESTS_ARE_INSTALLED; then
 	hdir="$CTDB_SCRIPTS_HELPER_BINDIR"
 	export CTDB_EVENTD="${hdir}/ctdb-eventd"
 	export CTDB_LOCK_HELPER="${hdir}/ctdb_lock_helper"
-	export CTDB_RECOVERY_HELPER="${hdir}/ctdb_recovery_helper"
-	export CTDB_TAKEOVER_HELPER="${hdir}/ctdb_takeover_helper"
 	export CTDB_CLUSTER_MUTEX_HELPER="${hdir}/ctdb_mutex_fcntl_helper"
 fi
 
