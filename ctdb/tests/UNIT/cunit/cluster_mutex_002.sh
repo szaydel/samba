@@ -9,7 +9,7 @@ export CTDB_CLUSTER_MUTEX_HELPER="/bin/false"
 lockfile="${CTDB_TEST_TMP_DIR}/cluster_mutex.lockfile"
 trap 'rm ${lockfile}' 0
 
-t="${CTDB_SCRIPTS_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
+t="${CTDB_TEST_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
 helper="!${t} ${lockfile}"
 
 test_case "No contention: lock, unlock"

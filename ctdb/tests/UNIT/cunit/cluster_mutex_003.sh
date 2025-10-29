@@ -15,7 +15,7 @@ trap 'rm ${lockfile}' 0
 if [ -n "$CTDB_TEST_MUTEX_HELPER" ]; then
 	helper="$CTDB_TEST_MUTEX_HELPER"
 else
-	t="${CTDB_SCRIPTS_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
+	t="${CTDB_TEST_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
 	helper="!${t} ${lockfile}"
 fi
 

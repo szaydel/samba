@@ -202,7 +202,7 @@ local_daemons_setup()
 	mkdir -p "$_cluster_lock_dir"
 	_cluster_lock="${_cluster_lock_dir}/cluster.lock"
 	if $_cluster_lock_use_command; then
-		_helper="${CTDB_SCRIPTS_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
+		_helper="${CTDB_TEST_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
 		_t="! ${_helper} ${_cluster_lock}"
 		if [ -n "$_cluster_lock_recheck_interval" ]; then
 			_t="${_t} ${_cluster_lock_recheck_interval}"

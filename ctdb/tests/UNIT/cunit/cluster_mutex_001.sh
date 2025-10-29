@@ -4,7 +4,7 @@
 
 . "${TEST_SCRIPTS_DIR}/unit.sh"
 
-t="${CTDB_SCRIPTS_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
+t="${CTDB_TEST_HELPER_BINDIR}/ctdb_mutex_fcntl_helper"
 export CTDB_CLUSTER_MUTEX_HELPER="$t"
 
 lockfile="${CTDB_TEST_TMP_DIR}/cluster_mutex.lockfile"

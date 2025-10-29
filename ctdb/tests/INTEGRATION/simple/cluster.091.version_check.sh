@@ -34,7 +34,7 @@ ctdb_nodes_restart "$test_node"
 wait_until_ready
 echo "GOOD: ctdbd restarted successfully on node ${test_node}"
 
-d="$CTDB_SCRIPTS_HELPER_BINDIR"
+d="$CTDB_TEST_HELPER_BINDIR"
 try_command_on_node "$test_node" "${d}/ctdb-path" "pidfile" "ctdbd"
 pidfile="$out"
 
