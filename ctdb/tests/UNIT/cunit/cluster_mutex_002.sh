@@ -75,7 +75,7 @@ UNLOCK
 UNLOCK
 EOF
 unit_test cluster_mutex_test lock-file-removed-no-recheck \
-	  "$helper 0" "$lockfile"
+	"$helper 0" "$lockfile"
 
 test_case "Recheck on, lock file not removed"
 ok <<EOF
@@ -83,7 +83,7 @@ LOCK
 UNLOCK
 EOF
 unit_test cluster_mutex_test lock-file-wait-recheck-unlock \
-	  "$helper 5" 10
+	"$helper 5" 10
 
 test_case "Recheck on, lock file removed"
 ok <<EOF
@@ -121,7 +121,6 @@ LOCK
 UNLOCK
 EOF
 unit_test cluster_mutex_test lock-io-timeout "$helper 5 7" "$lockfile" 1 2
-
 
 test_case "Recheck on, ping on, child waits, child blocks causing ping timeout"
 ok <<EOF

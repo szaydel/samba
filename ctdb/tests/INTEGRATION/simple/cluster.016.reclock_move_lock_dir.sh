@@ -29,14 +29,14 @@ ctdb_onnode "$test_node" getreclock
 # $out set by ctdb_onnode() above
 reclock_setting="$out"
 
-if [ -z "$reclock_setting" ] ; then
+if [ -z "$reclock_setting" ]; then
 	ctdb_test_skip "Cluster lock is not set"
 fi
 
 t="${reclock_setting% 5}"
 reclock="${t##* }"
 
-if [ ! -f "$reclock" ] ; then
+if [ ! -f "$reclock" ]; then
 	ctdb_test_error "Cluster lock file \"${reclock}\" is missing"
 fi
 

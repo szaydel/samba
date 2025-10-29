@@ -4,47 +4,54 @@ PATH="${PATH}:${CTDB_SCRIPTS_TOOLS_HELPER_DIR}"
 PATH="${PATH}:${CTDB_SCRIPTS_HELPER_BINDIR}"
 
 setup_ctdb_base "$CTDB_TEST_TMP_DIR" "ctdb-etc" \
-		functions
+	functions
 
-if "$CTDB_TEST_VERBOSE" ; then
-    debug () { echo "$@" ; }
+if "$CTDB_TEST_VERBOSE"; then
+	debug()
+	{
+		echo "$@"
+	}
 else
-    debug () { : ; }
+	debug()
+	{
+		:
+	}
 fi
 
 ctdbd_socket=$(ctdb-path socket "ctdbd")
 ctdbd_pidfile=$(ctdb-path pidfile "ctdbd")
 ctdbd_dbdir=$(ctdb-path vardir append "db")
 
-define_test ()
+define_test()
 {
-    _f=$(basename "$0" ".sh")
+	_f=$(basename "$0" ".sh")
 
-    case "$_f" in
+	case "$_f" in
 	ctdb.*)
-	    _cmd="${_f#ctdb.}"
-	    _cmd="${_cmd%.*}" # Strip test number
-	    export CTDB="ctdb"
-	    export CTDB_DEBUGLEVEL=NOTICE
-	    if [ -z "$FAKE_CTDBD_DEBUGLEVEL" ] ; then
-		    FAKE_CTDBD_DEBUGLEVEL="ERR"
-	    fi
-	    export FAKE_CTDBD_DEBUGLEVEL
-	    test_args="$_cmd"
-	    ;;
+		_cmd="${_f#ctdb.}"
+		_cmd="${_cmd%.*}" # Strip test number
+		export CTDB="ctdb"
+		export CTDB_DEBUGLEVEL=NOTICE
+		if [ -z "$FAKE_CTDBD_DEBUGLEVEL" ]; then
+			FAKE_CTDBD_DEBUGLEVEL="ERR"
+		fi
+		export FAKE_CTDBD_DEBUGLEVEL
+		test_args="$_cmd"
+		;;
 	*)
-	    die "Unknown pattern for testcase \"$_f\""
-    esac
+		die "Unknown pattern for testcase \"$_f\""
+		;;
+	esac
 
-    printf "%-28s - %s\n" "$_f" "$1"
+	printf "%-28s - %s\n" "$_f" "$1"
 }
 
-cleanup_ctdbd ()
+cleanup_ctdbd()
 {
 	debug "Cleaning up fake ctdbd"
 
 	pid=$(cat "$ctdbd_pidfile" 2>/dev/null || echo)
-	if [ -n "$pid" ] ; then
+	if [ -n "$pid" ]; then
 		kill $pid || true
 		rm -f "$ctdbd_pidfile"
 	fi
@@ -52,27 +59,27 @@ cleanup_ctdbd ()
 	rm -rf "$ctdbd_dbdir"
 }
 
-setup_ctdbd ()
+setup_ctdbd()
 {
 	echo "Setting up fake ctdbd"
 
 	mkdir -p "$ctdbd_dbdir"
 	$VALGRIND fake_ctdbd -d "$FAKE_CTDBD_DEBUGLEVEL" \
-		  -s "$ctdbd_socket" -p "$ctdbd_pidfile" \
-		  -D "$ctdbd_dbdir"
+		-s "$ctdbd_socket" -p "$ctdbd_pidfile" \
+		-D "$ctdbd_dbdir"
 	# Wait till fake_ctdbd is running
-	wait_until 10 test -S "$ctdbd_socket" || \
+	wait_until 10 test -S "$ctdbd_socket" ||
 		die "fake_ctdbd failed to start"
 
 	test_cleanup cleanup_ctdbd
 }
 
-ctdbd_getpid ()
+ctdbd_getpid()
 {
 	cat "$ctdbd_pidfile"
 }
 
-setup_natgw ()
+setup_natgw()
 {
 	debug "Setting up NAT gateway"
 
@@ -82,7 +89,7 @@ setup_natgw ()
 	cat >"$CTDB_NATGW_NODES"
 }
 
-setup_lvs ()
+setup_lvs()
 {
 	debug "Setting up LVS"
 
@@ -92,21 +99,21 @@ setup_lvs ()
 	cat >"$CTDB_LVS_NODES"
 }
 
-setup_nodes ()
+setup_nodes()
 {
-    _pnn="$1"
+	_pnn="$1"
 
-    _f="${CTDB_BASE}/nodes${_pnn:+.}${_pnn}"
+	_f="${CTDB_BASE}/nodes${_pnn:+.}${_pnn}"
 
-    cat >"$_f"
+	cat >"$_f"
 }
 
-simple_test_other ()
+simple_test_other()
 {
 	unit_test $CTDB -d $CTDB_DEBUGLEVEL "$@"
 }
 
-simple_test ()
+simple_test()
 {
 	simple_test_other $test_args "$@"
 }

@@ -13,14 +13,14 @@ dbdir_volatile="${dbdir}/volatile"
 dbdir_persistent="${dbdir}/persistent"
 dbdir_state="${dbdir}/state"
 
-remove_files ()
+remove_files()
 {
 	rm -f "$conffile" "$scriptfile"
 }
 
 test_cleanup remove_files
 
-cat > "$conffile" <<EOF
+cat >"$conffile" <<EOF
 [database]
     volatile database directory = ${dbdir_volatile}
     persistent database directory = ${dbdir_persistent}
@@ -68,7 +68,7 @@ ok <<EOF
 EOF
 unit_test ctdb-config get "database" "lock debug script"
 
-cat > "$conffile" <<EOF
+cat >"$conffile" <<EOF
 [database]
     lock debug script = $scriptfile
 EOF

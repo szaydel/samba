@@ -8,14 +8,14 @@ setup_ctdb_base "${CTDB_TEST_TMP_DIR}" "ctdb-etc"
 
 conffile="${CTDB_BASE}/ctdb.conf"
 
-remove_files ()
+remove_files()
 {
 	rm -f "$conffile"
 }
 
 test_cleanup remove_files
 
-cat > "$conffile" <<EOF
+cat >"$conffile" <<EOF
 EOF
 
 ok <<EOF
@@ -23,7 +23,7 @@ NOTICE
 EOF
 unit_test ctdb-config get "logging" "log level"
 
-cat > "$conffile" <<EOF
+cat >"$conffile" <<EOF
 [logging]
     location = syslog:magic
 EOF
@@ -34,7 +34,7 @@ Failed to load config file $conffile
 EOF
 unit_test ctdb-config validate
 
-cat > "$conffile" <<EOF
+cat >"$conffile" <<EOF
 [logging]
     log level = high
 EOF
@@ -45,7 +45,7 @@ Failed to load config file $conffile
 EOF
 unit_test ctdb-config validate
 
-cat > "$conffile" <<EOF
+cat >"$conffile" <<EOF
 [logging]
     location = syslog
     log level = notice

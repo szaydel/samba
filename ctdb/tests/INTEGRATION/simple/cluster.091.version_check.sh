@@ -22,10 +22,10 @@ minor="${rest%%.*}"
 echo "Node ${test_node} has version ${major}.${minor}"
 
 # Unchanged version - this should work
-export CTDB_TEST_SAMBA_VERSION=$(( (major << 16) | minor ))
+export CTDB_TEST_SAMBA_VERSION=$(((major << 16) | minor))
 printf '\nRestarting node %d with CTDB_TEST_SAMBA_VERSION=0x%08x\n' \
-       "$test_node" \
-       "$CTDB_TEST_SAMBA_VERSION"
+	"$test_node" \
+	"$CTDB_TEST_SAMBA_VERSION"
 ctdb_nodes_restart "$test_node"
 wait_until_ready
 echo "GOOD: ctdbd restarted successfully on node ${test_node}"
@@ -35,20 +35,20 @@ try_command_on_node "$test_node" "${d}/ctdb-path" "pidfile" "ctdbd"
 pidfile="$out"
 
 # Changed major version - this should fail
-export CTDB_TEST_SAMBA_VERSION=$(( ((major + 1) << 16) | minor ))
+export CTDB_TEST_SAMBA_VERSION=$((((major + 1) << 16) | minor))
 printf '\nRestarting node %d with CTDB_TEST_SAMBA_VERSION=0x%08x\n' \
-       "$test_node" \
-       "$CTDB_TEST_SAMBA_VERSION"
+	"$test_node" \
+	"$CTDB_TEST_SAMBA_VERSION"
 ctdb_nodes_restart "$test_node"
 echo "Will use PID file ${pidfile} to check for ctdbd exit"
 wait_until 30 ! test -f "$pidfile"
 echo "GOOD: ctdbd exited early on node ${test_node}"
 
 # Changed minor version - this should fail
-export CTDB_TEST_SAMBA_VERSION=$(( (major << 16) | (minor + 1) ))
+export CTDB_TEST_SAMBA_VERSION=$(((major << 16) | (minor + 1)))
 printf '\nRestarting node %d with CTDB_TEST_SAMBA_VERSION=0x%08x\n' \
-       "$test_node" \
-       "$CTDB_TEST_SAMBA_VERSION"
+	"$test_node" \
+	"$CTDB_TEST_SAMBA_VERSION"
 ctdb_nodes_start "$test_node"
 echo "Will use PID file ${pidfile} to check for ctdbd exit"
 wait_until 30 ! test -f "$pidfile"
