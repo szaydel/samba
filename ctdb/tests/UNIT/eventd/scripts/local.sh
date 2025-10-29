@@ -18,9 +18,10 @@ fi
 
 setup_ctdb_base "$CTDB_TEST_TMP_DIR" "ctdb-etc"
 
-ctdb_config=$(ctdb-path config)
 eventd_socket=$(ctdb-path socket eventd)
 eventd_pidfile=$(ctdb-path pidfile eventd)
+# eventd_scriptdir used in test cases
+# shellcheck disable=SC2034
 eventd_scriptdir=$(ctdb-path etcdir append events)
 eventd_logfile="${CTDB_BASE}/eventd.log"
 
@@ -37,7 +38,7 @@ cleanup_eventd()
 
 	pid=$(cat "$eventd_pidfile" 2>/dev/null || echo)
 	if [ -n "$pid" ]; then
-		kill $pid || true
+		kill "$pid" || true
 	fi
 }
 
@@ -71,8 +72,8 @@ background_wait()
 	[ -n "$background_running" ] || return
 
 	count=0
-	while [ ! -s "$background_status" -a $count -lt 30 ]; do
-		count=$(($count + 1))
+	while [ ! -s "$background_status" ] && [ $count -lt 30 ]; do
+		count=$((count + 1))
 		sleep 1
 	done
 
@@ -98,7 +99,7 @@ background_output()
 	fi
 	echo "--- Background ---"
 	unset background_running
-	[ $bg_status -eq 0 ] || exit $bg_status
+	[ "$bg_status" -eq 0 ] || exit "$bg_status"
 }
 
 simple_test()

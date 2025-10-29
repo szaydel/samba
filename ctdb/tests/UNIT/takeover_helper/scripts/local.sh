@@ -46,7 +46,7 @@ cleanup_ctdbd()
 
 	pid=$(cat "$ctdbd_pidfile" 2>/dev/null || echo)
 	if [ -n "$pid" ]; then
-		kill $pid || true
+		kill "$pid" || true
 		rm -f "$ctdbd_pidfile"
 	fi
 	rm -f "$ctdbd_socket"
@@ -101,6 +101,8 @@ test_takeover_helper()
 			3>"$takeover_helper_out"
 	) || exit $?
 
+	# $required_rc set by testcases
+	# shellcheck disable=SC2154
 	case "$required_rc" in
 	255) _t="-1" ;;
 	*) _t="$required_rc" ;;

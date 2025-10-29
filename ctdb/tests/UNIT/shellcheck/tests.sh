@@ -32,5 +32,8 @@ shellcheck_test -s bash \
 
 # Test scripts and stubs
 shellcheck_test -s sh \
+	"${CTDB_TEST_DIR}/UNIT/eventd/scripts/"* \
 	"${CTDB_TEST_DIR}/UNIT/eventscripts/scripts/"* \
-	"${CTDB_TEST_DIR}/UNIT/eventscripts/stubs/"*
+	"${CTDB_TEST_DIR}/UNIT/eventscripts/stubs/"* \
+	"${CTDB_TEST_DIR}/UNIT/takeover_helper/scripts/"* \
+	"${CTDB_TEST_DIR}/UNIT/tool/scripts/"*

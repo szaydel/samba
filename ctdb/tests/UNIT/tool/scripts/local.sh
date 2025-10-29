@@ -52,7 +52,7 @@ cleanup_ctdbd()
 
 	pid=$(cat "$ctdbd_pidfile" 2>/dev/null || echo)
 	if [ -n "$pid" ]; then
-		kill $pid || true
+		kill "$pid" || true
 		rm -f "$ctdbd_pidfile"
 	fi
 	rm -f "$ctdbd_socket"
@@ -110,11 +110,15 @@ setup_nodes()
 
 simple_test_other()
 {
-	unit_test $CTDB -d $CTDB_DEBUGLEVEL "$@"
+	# Want word splitting in $CTDB
+	# shellcheck disable=SC2086
+	unit_test $CTDB -d "$CTDB_DEBUGLEVEL" "$@"
 }
 
 simple_test()
 {
+	# Want word splitting in $test_args
+	# shellcheck disable=SC2086
 	simple_test_other $test_args "$@"
 }
 

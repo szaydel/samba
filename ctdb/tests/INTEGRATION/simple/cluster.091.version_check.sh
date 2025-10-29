@@ -12,7 +12,11 @@ ctdb_test_init
 
 select_test_node
 
+# $test_node assigned above by select_test_node()
+# shellcheck disable=SC2154
 try_command_on_node -v "$test_node" ctdb version
+# $out assigned above by try_command_on_node()
+# shellcheck disable=SC2154
 version="$out"
 
 major="${version%%.*}"
