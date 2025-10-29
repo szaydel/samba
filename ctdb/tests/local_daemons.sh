@@ -426,8 +426,7 @@ local_daemons_print_socket()
 
 	onnode_common
 
-	_path="${CTDB_SCRIPTS_HELPER_BINDIR}/ctdb-path"
-	onnode -q "$_nodes" "${VALGRIND:-} ${_path} socket ctdbd"
+	onnode -q "$_nodes" "${VALGRIND:-} ctdb-path socket ctdbd"
 }
 
 local_daemons_print_log()
