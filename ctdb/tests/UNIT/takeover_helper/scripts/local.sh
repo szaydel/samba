@@ -14,9 +14,6 @@ fi
 
 . "${TEST_SCRIPTS_DIR}/script_install_paths.sh"
 
-PATH="${PATH}:${CTDB_SCRIPTS_TOOLS_HELPER_DIR}"
-PATH="${PATH}:${CTDB_SCRIPTS_HELPER_BINDIR}"
-
 setup_ctdb_base "$CTDB_TEST_TMP_DIR" "ctdb-etc"
 
 ctdbd_socket=$(ctdb-path socket "ctdbd")

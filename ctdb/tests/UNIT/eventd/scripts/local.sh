@@ -2,8 +2,6 @@
 
 . "${TEST_SCRIPTS_DIR}/script_install_paths.sh"
 
-PATH="$PATH:$CTDB_SCRIPTS_TOOLS_HELPER_DIR"
-
 if "$CTDB_TEST_VERBOSE"; then
 	debug()
 	{

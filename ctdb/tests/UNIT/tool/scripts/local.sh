@@ -1,8 +1,5 @@
 # Hey Emacs, this is a -*- shell-script -*- !!!  :-)
 
-PATH="${PATH}:${CTDB_SCRIPTS_TOOLS_HELPER_DIR}"
-PATH="${PATH}:${CTDB_SCRIPTS_HELPER_BINDIR}"
-
 setup_ctdb_base "$CTDB_TEST_TMP_DIR" "ctdb-etc" \
 	functions
 
