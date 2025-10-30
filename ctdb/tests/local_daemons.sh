@@ -13,11 +13,6 @@ export TEST_SCRIPTS_DIR="${CTDB_TEST_DIR}/scripts"
 
 . "${TEST_SCRIPTS_DIR}/common.sh"
 
-if ! $CTDB_TESTS_ARE_INSTALLED; then
-	hdir="$CTDB_SCRIPTS_HELPER_BINDIR"
-	export CTDB_CLUSTER_MUTEX_HELPER="${hdir}/ctdb_mutex_fcntl_helper"
-fi
-
 ########################################
 
 # If the given IP is hosted then print 2 items: maskbits and iface

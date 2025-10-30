@@ -4,8 +4,6 @@
 
 . "${TEST_SCRIPTS_DIR}/unit.sh"
 
-export CTDB_CLUSTER_MUTEX_HELPER="/bin/false"
-
 lockfile="${CTDB_TEST_TMP_DIR}/cluster_mutex.lockfile"
 trap 'rm ${lockfile}' 0
 

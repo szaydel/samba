@@ -1163,6 +1163,7 @@ def build(bld):
     bld.SAMBA_BINARY('cluster_mutex_test',
                      source='tests/src/cluster_mutex_test.c',
                      deps='''ctdb-tests-backtrace
+                             ctdb-util
                              samba-util
                              talloc
                              tevent
