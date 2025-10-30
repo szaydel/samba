@@ -706,16 +706,7 @@ static void ctdb_lock_schedule(struct ctdb_context *ctdb)
 	struct lock_context *lock_ctx;
 	int ret;
 	TALLOC_CTX *tmp_ctx;
-	static char prog[PATH_MAX+1] = "";
 	char **args = NULL;
-
-	if (!ctdb_set_helper("lock helper",
-			     prog, sizeof(prog),
-			     "CTDB_LOCK_HELPER",
-			     CTDB_HELPER_BINDIR, "ctdb_lock_helper")) {
-		ctdb_die(ctdb, __location__
-			 " Unable to set lock helper\n");
-	}
 
 	/* Find a lock context with requests */
 	lock_ctx = ctdb_find_lock_context(ctdb);
@@ -761,7 +752,7 @@ static void ctdb_lock_schedule(struct ctdb_context *ctdb)
 
 	lock_ctx->child = ctdb_vfork_exec(lock_ctx,
 					  ctdb,
-					  prog,
+					  ctdb->lock_helper,
 					  talloc_array_length(args),
 					  (const char *const *)args);
 	if (lock_ctx->child == -1) {

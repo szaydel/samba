@@ -109,6 +109,13 @@ static struct ctdb_context *ctdb_init(struct tevent_context *ev)
 		return NULL;
 	}
 
+	ctdb->lock_helper = path_helperdir_append(ctdb, "ctdb_lock_helper");
+	if (ctdb->lock_helper == NULL) {
+		DBG_ERR("Memory allocation error\n");
+		talloc_free(ctdb);
+		return NULL;
+	}
+
 	ctdbd_pidfile = path_pidfile(ctdb, "ctdbd");
 	if (ctdbd_pidfile == NULL) {
 		DBG_ERR("Memory allocation error\n");

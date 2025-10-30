@@ -15,7 +15,6 @@ export TEST_SCRIPTS_DIR="${CTDB_TEST_DIR}/scripts"
 
 if ! $CTDB_TESTS_ARE_INSTALLED; then
 	hdir="$CTDB_SCRIPTS_HELPER_BINDIR"
-	export CTDB_LOCK_HELPER="${hdir}/ctdb_lock_helper"
 	export CTDB_CLUSTER_MUTEX_HELPER="${hdir}/ctdb_mutex_fcntl_helper"
 fi
 
