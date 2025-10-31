@@ -350,13 +350,12 @@ int main(int argc, const char *argv[])
 		goto fail;
 	}
 
-	if (ctdb_config.lock_debug_script != NULL) {
-		ret = setenv("CTDB_DEBUG_LOCKS",
-			     ctdb_config.lock_debug_script,
-			     1);
-		if (ret != 0) {
-			D_ERR("Failed to set up lock debugging (%s)\n",
-			      strerror(errno));
+	ctdb->lock_debug_script = ctdb_config.lock_debug_script;
+	if (ctdb->lock_debug_script == NULL) {
+		ctdb->lock_debug_script = path_etcdir_append(ctdb,
+							     "debug_locks.sh");
+		if (ctdb->lock_debug_script == NULL) {
+			DBG_ERR("No memory for lock debugging script path\n");
 			goto fail;
 		}
 	}

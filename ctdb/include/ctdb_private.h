@@ -334,6 +334,7 @@ struct ctdb_context {
 
 	/* Used for locking record/db/alldb */
 	const char *lock_helper;
+	const char *lock_debug_script;
 	struct lock_context *lock_current;
 	struct lock_context *lock_pending;
 };
