@@ -622,75 +622,105 @@ static bool generate_krb5_ccache(TALLOC_CTX *mem_ctx,
 	 * build the full ccname string based on the user's uid here -
 	 * Guenther*/
 
+	static const struct {
+		const char *prefix;
+		size_t prefix_len;
+	} ccache_prefixes[] = {
+		{.prefix = "DIR:/", .prefix_len = 5},
+		{.prefix = "FILE:/", .prefix_len = 6},
+		{.prefix = "KCM:", .prefix_len = 4},
+		{.prefix = "KEYRING:", .prefix_len = 8},
+		{.prefix = "WRFILE:/", .prefix_len = 8},
+	};
 	const char *gen_cc = NULL;
+	size_t i;
+	bool has_prefix = false;
 
-	if (uid != -1) {
-		if (strequal(type, "FILE")) {
-			gen_cc = talloc_asprintf(
-				mem_ctx, "FILE:/tmp/krb5cc_%d", uid);
-			if (gen_cc == NULL) {
-				return false;
-			}
-		}
-		if (strequal(type, "WRFILE")) {
-			gen_cc = talloc_asprintf(
-				mem_ctx, "WRFILE:/tmp/krb5cc_%d", uid);
-			if (gen_cc == NULL) {
-				return false;
-			}
-		}
-		if (strequal(type, "KEYRING")) {
-			gen_cc = talloc_asprintf(
-				mem_ctx, "KEYRING:persistent:%d", uid);
-			if (gen_cc == NULL) {
-				return false;
-			}
-		}
-		if (strequal(type, "KCM")) {
-			gen_cc = talloc_asprintf(mem_ctx,
-						 "KCM:%d",
-						 uid);
-			if (gen_cc == NULL) {
-				return false;
-			}
-		}
+	*user_ccache_file = NULL;
 
-		if (strnequal(type, "FILE:/", 6) ||
-		    strnequal(type, "WRFILE:/", 8) ||
-		    strnequal(type, "DIR:/", 5)) {
-
-			/* we allow only one "%u" substitution */
-
-			char *p;
-
-			p = strchr(type, '%');
-			if (p != NULL) {
-
-				p++;
-
-				if (p != NULL && *p == 'u' && strchr(p, '%') == NULL) {
-					char uid_str[sizeof("18446744073709551615")];
-
-					snprintf(uid_str, sizeof(uid_str), "%u", uid);
-
-					gen_cc = talloc_string_sub2(mem_ctx,
-							type,
-							"%u",
-							uid_str,
-							/* remove_unsafe_characters */
-							false,
-							/* replace_once */
-							true,
-							/* allow_trailing_dollar */
-							false);
-					if (gen_cc == NULL) {
-						return false;
-					}
-				}
-			}
+	/* Check if type has an explicit path prefix */
+	for (i = 0; i < ARRAY_SIZE(ccache_prefixes); i++) {
+		if (strnequal(type,
+			      ccache_prefixes[i].prefix,
+			      ccache_prefixes[i].prefix_len))
+		{
+			has_prefix = true;
+			break;
 		}
 	}
 
+	/* Handle types with explicit paths and %u substitution */
+	if (has_prefix) {
+		char *p;
+
+		p = strchr(type, '%');
+		if (p != NULL) {
+			p++;
+
+			/* We support only one "%u" substitution */
+			if (p != NULL && *p == 'u' && strchr(p, '%') == NULL) {
+				char uid_str[sizeof("18446744073709551615")];
+				int rc;
+
+				/* Unset uid is not an error */
+				if (uid == (uid_t)-1) {
+					return true;
+				}
+
+				rc = snprintf(uid_str,
+					      sizeof(uid_str),
+					      "%u",
+					      (unsigned int)uid);
+				if (rc < 1) {
+					return false;
+				}
+
+				gen_cc = talloc_string_sub2(
+					mem_ctx,
+					type,
+					"%u",
+					uid_str,
+					false, /* remove_unsafe_characters */
+					true, /* replace_once */
+					false); /* allow_trailing_dollar */
+				if (gen_cc == NULL) {
+					return false;
+				}
+			}
+		}
+
+		goto done;
+	}
+
+	/* Unset uid is not an error */
+	if (uid == (uid_t)-1) {
+		return true;
+	}
+
+	/*
+	 * We can't use a table, as the second argument of talloc_asprintf needs
+	 * to be a string literal.
+	 */
+	if (strequal(type, "FILE")) {
+		gen_cc = talloc_asprintf(mem_ctx,
+					 "FILE:/tmp/krb5cc_%u",
+					 (unsigned int)uid);
+	} else if (strequal(type, "WRFILE")) {
+		gen_cc = talloc_asprintf(mem_ctx,
+					 "WRFILE:/tmp/krb5cc_%u",
+					 (unsigned int)uid);
+	} else if (strequal(type, "KEYRING")) {
+		gen_cc = talloc_asprintf(mem_ctx,
+					 "KEYRING:persistent:%u",
+					 (unsigned int)uid);
+	} else if (strequal(type, "KCM")) {
+		gen_cc = talloc_asprintf(mem_ctx, "KCM:%u", (unsigned int)uid);
+	}
+	if (gen_cc == NULL) {
+		return false;
+	}
+
+done:
 	*user_ccache_file = gen_cc;
 
 	DBG_DEBUG("using ccache: %s\n", gen_cc != NULL ? gen_cc : "(internal)");
