@@ -649,16 +649,25 @@ static bool generate_krb5_ccache(TALLOC_CTX *mem_ctx,
 		}
 	}
 
-	/* Handle types with explicit paths and %u substitution */
+	/* Handle types with explicit paths and %u or %{uid} substitution */
 	if (has_prefix) {
 		char *p;
+		const char *subst_pattern = NULL;
 
 		p = strchr(type, '%');
 		if (p != NULL) {
 			p++;
 
-			/* We support only one "%u" substitution */
+			/* We support "%u" or "%{uid}" substitution */
 			if (p != NULL && *p == 'u' && strchr(p, '%') == NULL) {
+				subst_pattern = "%u";
+			} else if (p != NULL &&
+				   strncmp(p, "{uid}", 5) == 0 &&
+				   strchr(p + 5, '%') == NULL) {
+				subst_pattern = "%{uid}";
+			}
+
+			if (subst_pattern != NULL) {
 				char uid_str[sizeof("18446744073709551615")];
 				int rc;
 
@@ -678,7 +687,7 @@ static bool generate_krb5_ccache(TALLOC_CTX *mem_ctx,
 				gen_cc = talloc_string_sub2(
 					mem_ctx,
 					type,
-					"%u",
+					subst_pattern,
 					uid_str,
 					false, /* remove_unsafe_characters */
 					true, /* replace_once */

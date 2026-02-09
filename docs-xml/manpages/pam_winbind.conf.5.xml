@@ -157,8 +157,8 @@
 		<parameter>DIR:/path</parameter>,
 		<parameter>FILE:/path</parameter>, and
 		<parameter>WRFILE:/path</parameter>.
-		You can use the <quote>%u</quote> pattern to substitute the
-		numeric user ID. Examples:</para>
+		You can use the <quote>%u</quote> or <quote>%{uid}</quote> pattern to
+		substitute the numeric user ID. Examples:</para>
 
 		<variablelist>
 			<varlistentry>
