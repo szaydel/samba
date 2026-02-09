@@ -56,7 +56,7 @@
 <refsect1>
 	<title>OPTIONS</title>
 	<para>
-	
+
 		pam_winbind supports several options which can either be set in
 		the PAM configuration files or in the pam_winbind configuration
 		file situated at
@@ -119,7 +119,7 @@
 		<varlistentry>
 		<term>use_authtok</term>
 		<listitem><para>
-		Set the new password to the one provided by the previously stacked password module. If this option is not set 
+		Set the new password to the one provided by the previously stacked password module. If this option is not set
 		pam_winbind will ask the user for the new password.
 		</para></listitem>
 		</varlistentry>
@@ -306,12 +306,12 @@
 
 <refsect1>
 	<title>AUTHOR</title>
-	
+
 	<para>
 	The original Samba software and related utilities were created by Andrew Tridgell. Samba is now developed by
 	the Samba Team as an Open Source project similar to the way the Linux kernel is developed.
 	</para>
-	
+
 	<para>This manpage was written by Jelmer Vernooij and Guenther Deschner.</para>
 
 </refsect1>
