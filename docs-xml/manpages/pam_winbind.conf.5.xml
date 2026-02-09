@@ -122,6 +122,18 @@
 
 		<variablelist>
 			<varlistentry>
+				<term>DEFAULT</term>
+				<listitem><para>Uses the default credential cache
+				location as specified in the system's
+				<filename>krb5.conf</filename> configuration file
+				(<quote>default_ccache_name</quote>). This option
+				allows the Kerberos configuration to centrally
+				control the credential cache location. The
+				<quote>%{uid}</quote> pattern in
+				<filename>krb5.conf</filename> will be substituted
+				with the user's UID.</para></listitem>
+			</varlistentry>
+			<varlistentry>
 				<term>KCM</term>
 				<listitem><para>Uses Kerberos Credential Manager
 				(generates <quote>KCM:&lt;UID&gt;</quote>). This is the

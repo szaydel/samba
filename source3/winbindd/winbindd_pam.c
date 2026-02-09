@@ -638,6 +638,43 @@ static bool generate_krb5_ccache(TALLOC_CTX *mem_ctx,
 
 	*user_ccache_file = NULL;
 
+	/*
+	 * Handle DEFAULT type - use the default_ccache_name from krb5.conf.
+	 * This allows the system Kerberos configuration to determine the
+	 * credential cache location.
+	 */
+	if (strequal(type, "DEFAULT")) {
+		krb5_context krbctx = NULL;
+		krb5_error_code k5ret;
+		char *cc_default_name = NULL;
+
+		k5ret = smb_krb5_init_context_common(&krbctx);
+		if (k5ret != 0) {
+			DBG_ERR("Failed to initialize krb5 context: %d\n",
+				k5ret);
+			return false;
+		}
+
+		k5ret = smb_krb5_config_cc_default_name(mem_ctx,
+							krbctx,
+							&cc_default_name);
+		krb5_free_context(krbctx);
+		if (k5ret != 0) {
+			DBG_ERR("Failed to get default ccache name: %d\n",
+				k5ret);
+			return false;
+		}
+		if (cc_default_name == NULL) {
+			DBG_ERR("No default_ccache_name configured "
+				"in krb5.conf\n");
+			return false;
+		}
+
+		type = cc_default_name;
+
+		/* Now let the code below expand %{uid} */
+	}
+
 	/* Check if type has an explicit path prefix */
 	for (i = 0; i < ARRAY_SIZE(ccache_prefixes); i++) {
 		if (strnequal(type,
