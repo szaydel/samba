@@ -916,7 +916,8 @@ def SAMBA_GENERATOR(bld, name, rule, source='', target='',
                     header_path=None,
                     vars=None,
                     dep_vars=None,
-                    always=False):
+                    always=False,
+                    symlink=False):
     '''A generic source generator target'''
 
     if dep_vars is None:
@@ -938,9 +939,18 @@ def SAMBA_GENERATOR(bld, name, rule, source='', target='',
     if shell:
         rule = "set -e; " + rule
 
+    if symlink:
+        features = 'symlink_generated'
+        use_cache = False
+    else:
+        features = ''
+        use_cache = True
+
     bld.SET_BUILD_GROUP(group)
     t = bld(
         rule=rule,
+        features=features,
+        cache_rule=use_cache,
         source=bld.EXPAND_VARIABLES(source, vars=vars),
         shell=shell,
         target=target,
