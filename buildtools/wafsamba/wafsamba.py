@@ -917,7 +917,8 @@ def SAMBA_GENERATOR(bld, name, rule, source='', target='',
                     vars=None,
                     dep_vars=None,
                     always=False,
-                    symlink=False):
+                    symlink=False,
+                    chmod=None):
     '''A generic source generator target'''
 
     if dep_vars is None:
@@ -959,6 +960,7 @@ def SAMBA_GENERATOR(bld, name, rule, source='', target='',
         ext_out='.c',
         samba_type='GENERATOR',
         dep_vars = dep_vars,
+        chmod=chmod,
         name=name)
 
     if vars is None:
