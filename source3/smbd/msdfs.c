@@ -1293,9 +1293,7 @@ char *msdfs_link_string(TALLOC_CTX *ctx,
 			goto err;
 		}
 
-		if (!insert_comma) {
-			insert_comma = true;
-		}
+		insert_comma = true;
 
 		TALLOC_FREE(refpath);
 	}
