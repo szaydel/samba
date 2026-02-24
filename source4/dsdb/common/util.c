@@ -4110,16 +4110,8 @@ const char *samdb_cn_to_lDAPDisplayName(TALLOC_CTX *mem_ctx, const char *cn)
 		tokens[i][0] = toupper(tokens[i][0]);
 
 	ret = talloc_strdup(mem_ctx, tokens[0]);
-	if (ret == NULL) {
-		talloc_free(tokens);
-		return NULL;
-	}
 	for (i = 1; tokens[i] != NULL; i++) {
-		ret = talloc_asprintf_append_buffer(ret, "%s", tokens[i]);
-		if (ret == NULL) {
-			talloc_free(tokens);
-			return NULL;
-		}
+		talloc_asprintf_addbuf(&ret, "%s", tokens[i]);
 	}
 
 	talloc_free(tokens);
