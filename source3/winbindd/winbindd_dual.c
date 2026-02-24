@@ -1122,7 +1122,7 @@ static const char *collect_onlinestatus(TALLOC_CTX *mem_ctx)
 
 	talloc_asprintf_addbuf(&buf, "\n");
 
-	DEBUG(5,("collect_onlinestatus: %s", buf));
+	DBG_INFO("%s", buf);
 
 	return buf;
 }
