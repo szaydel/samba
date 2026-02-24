@@ -1108,22 +1108,19 @@ static const char *collect_onlinestatus(TALLOC_CTX *mem_ctx)
 	struct winbindd_domain *domain;
 	char *buf = NULL;
 
-	if ((buf = talloc_asprintf(mem_ctx, "global:%s ",
-				   get_global_winbindd_state_offline() ?
-				   "Offline":"Online")) == NULL) {
-		return NULL;
-	}
+	buf = talloc_asprintf(mem_ctx,
+			      "global:%s ",
+			      get_global_winbindd_state_offline() ? "Offline"
+								  : "Online");
 
 	for (domain = domain_list(); domain; domain = domain->next) {
-		if ((buf = talloc_asprintf_append_buffer(buf, "%s:%s ",
-						  domain->name,
-						  domain->online ?
-						  "Online":"Offline")) == NULL) {
-			return NULL;
-		}
+		talloc_asprintf_addbuf(&buf,
+				       "%s:%s ",
+				       domain->name,
+				       domain->online ? "Online" : "Offline");
 	}
 
-	buf = talloc_asprintf_append_buffer(buf, "\n");
+	talloc_asprintf_addbuf(&buf, "\n");
 
 	DEBUG(5,("collect_onlinestatus: %s", buf));
 
