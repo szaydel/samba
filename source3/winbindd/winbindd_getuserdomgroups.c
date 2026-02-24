@@ -107,14 +107,12 @@ NTSTATUS winbindd_getuserdomgroups_recv(struct tevent_req *req,
 		 state->num_sids);
 	for (i=0; i<state->num_sids; i++) {
 		struct dom_sid_buf tmp;
-		sidlist = talloc_asprintf_append_buffer(
-			sidlist, "%s\n",
-			dom_sid_str_buf(&state->sids[i], &tmp));
+		const char *str = dom_sid_str_buf(&state->sids[i], &tmp);
+		sidlist = talloc_asprintf_append_buffer(sidlist, "%s\n", str);
 		if (sidlist == NULL) {
 			return NT_STATUS_NO_MEMORY;
 		}
-		D_NOTICE("%"PRIu32": %s\n",
-			 i, dom_sid_str_buf(&state->sids[i], &tmp));
+		D_NOTICE("%" PRIu32 ": %s\n", i, str);
 	}
 	response->extra_data.data = sidlist;
 	response->length += talloc_get_size(sidlist);
