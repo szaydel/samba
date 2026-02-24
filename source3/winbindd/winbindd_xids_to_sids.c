@@ -119,8 +119,7 @@ NTSTATUS winbindd_xids_to_sids_recv(struct tevent_req *req,
 		const char *str = "-";
 
 		if (!is_null_sid(&state->sids[i])) {
-			dom_sid_str_buf(&state->sids[i], &sid_buf);
-			str = sid_buf.buf;
+			str = dom_sid_str_buf(&state->sids[i], &sid_buf);
 		}
 
 		D_NOTICE("%"PRIu32": XID %"PRIu32" mapped to SID %s.\n",
