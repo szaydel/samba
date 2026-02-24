@@ -47,7 +47,7 @@
    Applications with the need to alter their behaviour when
    socket wrapper is active, can link use these functions.
 
-   By default it's required for applications to use any of these
+   By default it's not required for applications to use any of these
    functions as libquic_ko_wrapper.so is injected at runtime via
    LD_PRELOAD.
 
