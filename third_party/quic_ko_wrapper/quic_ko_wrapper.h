@@ -68,7 +68,7 @@ bool quic_ko_wrapper_enabled(void);
  *
  * quic_ko_wrapper may not be able to intercept the __close_nocancel()
  * syscall made from within libc.so. As result it's possible
- * that the in memory meta date of quic_ko_wrapper references
+ * that the in memory meta data of quic_ko_wrapper references
  * stale file descriptors, which are already reused for unrelated
  * kernel objects, e.g. files, directories, ...
  *
