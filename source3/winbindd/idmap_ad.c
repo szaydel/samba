@@ -913,17 +913,17 @@ static NTSTATUS idmap_ad_unixids_to_sids(struct idmap_domain *dom,
 		switch (id->xid.type) {
 		    case ID_TYPE_UID: {
 			    talloc_asprintf_addbuf(&u_filter,
-						   "(%s=%ju)",
+						   "(%s=%" PRIu32 ")",
 						   ctx->schema->uid,
-						   (uintmax_t)id->xid.id);
+						   id->xid.id);
 			    break;
 		    }
 
 		    case ID_TYPE_GID: {
 			    talloc_asprintf_addbuf(&g_filter,
-						   "(%s=%ju)",
+						   "(%s=%" PRIu32 ")",
 						   ctx->schema->gid,
-						   (uintmax_t)id->xid.id);
+						   id->xid.id);
 			    break;
 		    }
 
