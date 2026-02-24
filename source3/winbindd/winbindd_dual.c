@@ -60,7 +60,7 @@ static void forall_domain_children(bool (*fn)(struct winbindd_child *c,
 	struct winbindd_domain *d;
 
 	for (d = domain_list(); d != NULL; d = d->next) {
-		int i;
+		size_t i;
 
 		for (i = 0; i < talloc_array_length(d->children); i++) {
 			struct winbindd_child *c = &d->children[i];
@@ -432,7 +432,7 @@ static struct winbindd_child *choose_domain_child(struct winbindd_domain *domain
 {
 	struct winbindd_child *shortest = &domain->children[0];
 	struct winbindd_child *current;
-	int i;
+	size_t i;
 
 	for (i=0; i<talloc_array_length(domain->children); i++) {
 		size_t shortest_len, current_len;
