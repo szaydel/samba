@@ -2505,6 +2505,9 @@ NTSTATUS smbd_do_qfsinfo(struct smbXsrv_connection *xconn,
 
 		case SMB_QUERY_POSIX_WHOAMI:
 		{
+			struct auth_session_info *sess = conn->session_info;
+			struct security_token *tok = sess->security_token;
+			struct security_unix_token *utok = sess->unix_token;
 			uint32_t flags = 0;
 			uint32_t sid_bytes;
 			uint32_t i;
@@ -2517,7 +2520,8 @@ NTSTATUS smbd_do_qfsinfo(struct smbXsrv_connection *xconn,
 				return NT_STATUS_BUFFER_TOO_SMALL;
 			}
 
-			if (security_session_user_level(conn->session_info, NULL) < SECURITY_USER) {
+			if (security_session_user_level(sess, NULL) <
+			    SECURITY_USER) {
 				flags |= SMB_WHOAMI_GUEST;
 			}
 
@@ -2525,27 +2529,23 @@ NTSTATUS smbd_do_qfsinfo(struct smbXsrv_connection *xconn,
 			 * platform size. This matches
 			 * SMB_QUERY_FILE_UNIX_BASIC and friends.
 			 */
-			data_len = 4 /* flags */
-			    + 4 /* flag mask */
-			    + 8 /* uid */
-			    + 8 /* gid */
-			    + 4 /* ngroups */
-			    + 4 /* num_sids */
-			    + 4 /* SID bytes */
-			    + 4 /* pad/reserved */
-			    + (conn->session_info->unix_token->ngroups * 8)
-				/* groups list */
-			    + (conn->session_info->security_token->num_sids *
-				    SID_MAX_SIZE)
+			data_len = 4   /* flags */
+				   + 4 /* flag mask */
+				   + 8 /* uid */
+				   + 8 /* gid */
+				   + 4 /* ngroups */
+				   + 4 /* num_sids */
+				   + 4 /* SID bytes */
+				   + 4 /* pad/reserved */
+				   + (utok->ngroups * 8)
+				   /* groups list */
+				   + (tok->num_sids * SID_MAX_SIZE)
 				/* SID list */;
 
 			SIVAL(pdata, 0, flags);
 			SIVAL(pdata, 4, SMB_WHOAMI_MASK);
-			SBIG_UINT(pdata, 8,
-				  (uint64_t)conn->session_info->unix_token->uid);
-			SBIG_UINT(pdata, 16,
-				  (uint64_t)conn->session_info->unix_token->gid);
-
+			SBIG_UINT(pdata, 8, (uint64_t)utok->uid);
+			SBIG_UINT(pdata, 16, (uint64_t)utok->gid);
 
 			if (data_len >= max_data_bytes) {
 				/* Potential overflow, skip the GIDs and SIDs. */
@@ -2559,18 +2559,16 @@ NTSTATUS smbd_do_qfsinfo(struct smbXsrv_connection *xconn,
 				break;
 			}
 
-			SIVAL(pdata, 24, conn->session_info->unix_token->ngroups);
-			SIVAL(pdata, 28, conn->session_info->security_token->num_sids);
+			SIVAL(pdata, 24, utok->ngroups);
+			SIVAL(pdata, 28, tok->num_sids);
 
 			/* We walk the SID list twice, but this call is fairly
 			 * infrequent, and I don't expect that it's performance
 			 * sensitive -- jpeach
 			 */
-			for (i = 0, sid_bytes = 0;
-			     i < conn->session_info->security_token->num_sids; ++i) {
-				sid_bytes += ndr_size_dom_sid(
-					&conn->session_info->security_token->sids[i],
-					0);
+			for (i = 0, sid_bytes = 0; i < tok->num_sids; ++i) {
+				sid_bytes += ndr_size_dom_sid(&tok->sids[i],
+							      0);
 			}
 
 			/* SID list byte count */
@@ -2581,22 +2579,21 @@ NTSTATUS smbd_do_qfsinfo(struct smbXsrv_connection *xconn,
 			data_len = 40;
 
 			/* GID list */
-			for (i = 0; i < conn->session_info->unix_token->ngroups; ++i) {
-				SBIG_UINT(pdata, data_len,
-					  (uint64_t)conn->session_info->unix_token->groups[i]);
+			for (i = 0; i < utok->ngroups; ++i) {
+				SBIG_UINT(pdata,
+					  data_len,
+					  (uint64_t)utok->groups[i]);
 				data_len += 8;
 			}
 
 			/* SID list */
-			for (i = 0;
-			    i < conn->session_info->security_token->num_sids; ++i) {
-				int sid_len = ndr_size_dom_sid(
-					&conn->session_info->security_token->sids[i],
-					0);
+			for (i = 0; i < tok->num_sids; ++i) {
+				int sid_len = ndr_size_dom_sid(&tok->sids[i],
+							       0);
 
 				sid_linearize((uint8_t *)(pdata + data_len),
 					      sid_len,
-				    &conn->session_info->security_token->sids[i]);
+					      &tok->sids[i]);
 				data_len += sid_len;
 			}
 
