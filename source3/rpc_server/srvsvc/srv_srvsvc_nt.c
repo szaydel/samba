@@ -196,7 +196,12 @@ static WERROR net_enum_files(TALLOC_CTX *ctx,
 	for (i=0; i<(*ctr3)->count; i++) {
 		struct files_struct *fsp = NULL;
 		struct byte_range_lock *brl = NULL;
-		unsigned int num_locks = 0;
+
+		(*ctr3)->array[i].num_locks = 0;
+
+		if (!count_file_locks) {
+			continue;
+		}
 
 		fsp = talloc_zero(talloc_tos(), struct files_struct);
 		if (fsp == NULL) {
@@ -204,16 +209,11 @@ static WERROR net_enum_files(TALLOC_CTX *ctx,
 		}
 		fsp->file_id = f_enum_cnt.fids[i];
 
-		if (count_file_locks) {
-			brl = brl_get_locks_readonly(fsp);
-			if (brl != NULL) {
-				num_locks = brl_num_locks(brl);
-				TALLOC_FREE(brl);
-			}
+		brl = brl_get_locks_readonly(fsp);
+		if (brl != NULL) {
+			(*ctr3)->array[i].num_locks = brl_num_locks(brl);
+			TALLOC_FREE(brl);
 		}
-
-		(*ctr3)->array[i].num_locks = num_locks;
-
 		TALLOC_FREE(fsp);
 	}
 
