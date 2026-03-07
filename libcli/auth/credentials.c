@@ -1750,6 +1750,8 @@ struct netlogon_creds_CredentialState *netlogon_creds_copy(
 		return NULL;
 	}
 
+	talloc_keep_secret(creds);
+
 	ndr_err = ndr_deepcopy_struct(netlogon_creds_CredentialState,
 				      creds_in, creds, creds);
 	if (!NDR_ERR_CODE_IS_SUCCESS(ndr_err)) {

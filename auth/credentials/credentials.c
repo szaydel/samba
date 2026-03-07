@@ -1130,6 +1130,8 @@ _PUBLIC_ void cli_credentials_parse_string(struct cli_credentials *credentials, 
 	if ((p = strchr_m(uname,'%'))) {
 		*p = 0;
 		cli_credentials_set_password(credentials, p+1, obtained);
+		/* zero the copy if it contains password */
+		talloc_keep_secret(uname_free);
 	}
 
 	if ((p = strchr_m(uname,'@'))) {
