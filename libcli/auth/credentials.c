@@ -194,9 +194,13 @@ static NTSTATUS netlogon_creds_init_64bit(struct netlogon_creds_CredentialState 
 
 	rc = des_crypt128(creds->session_key, sum2, machine_password->hash);
 	if (rc != 0) {
+		ZERO_ARRAY(sum);
+		ZERO_ARRAY(sum2);
 		return gnutls_error_to_ntstatus(rc, NT_STATUS_ACCESS_DISABLED_BY_POLICY_OTHER);
 	}
 
+	ZERO_ARRAY(sum);
+	ZERO_ARRAY(sum2);
 	return NT_STATUS_OK;
 }
 
@@ -398,6 +402,7 @@ static NTSTATUS netlogon_creds_des_encrypt_LMKey(struct netlogon_creds_Credentia
 		return gnutls_error_to_ntstatus(rc, NT_STATUS_ACCESS_DISABLED_BY_POLICY_OTHER);
 	}
 	*key = tmp;
+	ZERO_STRUCT(tmp);
 
 	return NT_STATUS_OK;
 }
@@ -416,6 +421,7 @@ static NTSTATUS netlogon_creds_des_decrypt_LMKey(struct netlogon_creds_Credentia
 		return gnutls_error_to_ntstatus(rc, NT_STATUS_ACCESS_DISABLED_BY_POLICY_OTHER);
 	}
 	*key = tmp;
+	ZERO_STRUCT(tmp);
 
 	return NT_STATUS_OK;
 }
@@ -434,6 +440,7 @@ NTSTATUS netlogon_creds_des_encrypt(struct netlogon_creds_CredentialState *creds
 		return gnutls_error_to_ntstatus(rc, NT_STATUS_ACCESS_DISABLED_BY_POLICY_OTHER);
 	}
 	*pass = tmp;
+	ZERO_STRUCT(tmp);
 
 	return NT_STATUS_OK;
 }
@@ -452,6 +459,7 @@ NTSTATUS netlogon_creds_des_decrypt(struct netlogon_creds_CredentialState *creds
 		return gnutls_error_to_ntstatus(rc, NT_STATUS_ACCESS_DISABLED_BY_POLICY_OTHER);
 	}
 	*pass = tmp;
+	ZERO_STRUCT(tmp);
 
 	return NT_STATUS_OK;
 }

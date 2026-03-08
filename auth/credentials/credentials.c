@@ -1812,16 +1812,19 @@ _PUBLIC_ bool cli_credentials_parse_password_fd(struct cli_credentials *credenti
 				"Error reading password from file descriptor "
 				"%d: empty password\n",
 				fd);
+			ZERO_ARRAY(pass);
 			return false;
 
 		default:
 			fprintf(stderr, "Error reading password from file descriptor %d: %s\n",
 					fd, strerror(errno));
+			ZERO_ARRAY(pass);
 			return false;
 		}
 	}
 
 	cli_credentials_set_password(credentials, pass, obtained);
+	ZERO_ARRAY(pass);
 	return true;
 }
 

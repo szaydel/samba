@@ -56,10 +56,17 @@ int sess_crypt_blob(DATA_BLOB *out, const DATA_BLOB *in, const DATA_BLOB *sessio
 
 		rc = des_crypt56_gnutls(bout, bin, key, encrypt);
 		if (rc != 0) {
+			ZERO_ARRAY(bin);
+			ZERO_ARRAY(bout);
+			ZERO_ARRAY(key);
 			return rc;
 		}
 
 		memcpy(&out->data[i], bout, 8);
+
+		ZERO_ARRAY(bin);
+		ZERO_ARRAY(bout);
+		ZERO_ARRAY(key);
 	}
 	return 0;
 }
