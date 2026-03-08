@@ -1125,6 +1125,9 @@ _PUBLIC_ void cli_credentials_parse_string(struct cli_credentials *credentials, 
 	}
 
 	uname = talloc_strdup(credentials, data);
+	if (uname == NULL) {
+		return;
+	}
 	uname_free = uname;
 
 	if ((p = strchr_m(uname,'%'))) {
