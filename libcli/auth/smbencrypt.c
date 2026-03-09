@@ -525,7 +525,10 @@ static DATA_BLOB NTLMv2_generate_response(TALLOC_CTX *out_mem_ctx,
 		return data_blob(NULL, 0);
 	}
 
-	final_response = data_blob_talloc(out_mem_ctx, NULL, sizeof(ntlmv2_response) + ntlmv2_client_data.length);
+	final_response = data_blob_talloc_s(out_mem_ctx,
+					    NULL,
+					    sizeof(ntlmv2_response) +
+						    ntlmv2_client_data.length);
 
 	memcpy(final_response.data, ntlmv2_response, sizeof(ntlmv2_response));
 
@@ -543,8 +546,8 @@ static DATA_BLOB LMv2_generate_response(TALLOC_CTX *mem_ctx,
 					const DATA_BLOB *server_chal)
 {
 	uint8_t lmv2_response[16];
-	DATA_BLOB lmv2_client_data = data_blob_talloc(mem_ctx, NULL, 8);
-	DATA_BLOB final_response = data_blob_talloc(mem_ctx, NULL,24);
+	DATA_BLOB lmv2_client_data = data_blob_talloc_s(mem_ctx, NULL, 8);
+	DATA_BLOB final_response = data_blob_talloc_s(mem_ctx, NULL, 24);
 	NTSTATUS status;
 
 	/* LMv2 */
@@ -610,7 +613,9 @@ bool SMBNTLMv2encrypt_hash(TALLOC_CTX *mem_ctx,
 							*nttime,
 							names_blob);
 		if (user_session_key) {
-			*user_session_key = data_blob_talloc(mem_ctx, NULL, 16);
+			*user_session_key = data_blob_talloc_s(mem_ctx,
+							       NULL,
+							       16);
 
 			/* The NTLMv2 calculations also provide a session key, for signing etc later */
 			/* use only the first 16 bytes of nt_response for session key */
@@ -635,7 +640,9 @@ bool SMBNTLMv2encrypt_hash(TALLOC_CTX *mem_ctx,
 							      server_chal);
 		}
 		if (lm_session_key) {
-			*lm_session_key = data_blob_talloc(mem_ctx, NULL, 16);
+			*lm_session_key = data_blob_talloc_s(mem_ctx,
+							     NULL,
+							     16);
 
 			/* The NTLMv2 calculations also provide a session key, for signing etc later */
 			/* use only the first 16 bytes of lm_response for session key */
