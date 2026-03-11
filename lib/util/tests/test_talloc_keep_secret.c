@@ -35,6 +35,13 @@ static void test_talloc_keep_secret(void ** state)
 	assert_non_null(ptr1);
 	assert_string_equal(ptr1, "secret");
 
+	ptr1_talloc_name = talloc_get_name(ptr1);
+	assert_string_equal(ptr1_talloc_name, "secret");
+
+	/*
+	 * talloc_keep_secret() changes the talloc name if the name reveals the
+	 * memory content.
+	 */
 	talloc_keep_secret(ptr1);
 
 	ptr1_talloc_name = talloc_get_name(ptr1);
