@@ -24,7 +24,9 @@ static void test_talloc_keep_secret(void ** state)
 	TALLOC_CTX *pool = NULL;
 	char *ptr1 = NULL;
 	char *ptr2 = NULL;
+	char *ptr3 = NULL;
 	const char *ptr1_talloc_name = NULL;
+	const char *ptr3_talloc_name = NULL;
 	size_t ptr1_size;
 	size_t i;
 
@@ -62,6 +64,24 @@ static void test_talloc_keep_secret(void ** state)
 	for (i = 1; i < ptr1_size; i++) {
 		assert_int_not_equal(ptr2[0], ptr2[i]);
 	}
+
+	ptr3 = talloc_zero(pool, char);
+	*ptr3 = 0;
+	ptr3_talloc_name = talloc_get_name(ptr3);
+	assert_string_equal(ptr3_talloc_name, "char");
+
+	/*
+	 * talloc_keep_secret() does NOT change the talloc name if the name
+	 * does NOT reveal the memory content.
+	 */
+	talloc_keep_secret(ptr3);
+
+	ptr3_talloc_name = talloc_get_name(ptr3);
+	assert_string_equal(ptr3_talloc_name, "char");
+
+	expect_string(rep_memset_explicit, dest, "");
+	expect_value(rep_memset_explicit, ch, (int)'\0');
+	expect_value(rep_memset_explicit, count, 1);
 
 	talloc_free(pool);
 }
