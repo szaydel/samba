@@ -693,10 +693,6 @@ _PUBLIC_ bool cli_credentials_set_password(struct cli_credentials *cred,
 			return false;
 		}
 		talloc_keep_secret(discard_const(cred->password));
-
-		/* Don't print the actual password in talloc memory dumps */
-		talloc_set_name_const(cred->password,
-			"password set via cli_credentials_set_password");
 		cred->password_obtained = obtained;
 
 		return true;
