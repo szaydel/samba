@@ -335,7 +335,7 @@ static void test_smb2_bench_echo_progress(struct tevent_context *ev,
 
 		torture_comment(state->tctx,
 				"%.2f second: "
-				"echo[num/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]      \r",
+				"echo[num/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]      \r",
 				timeval_elapsed(&state->starttime),
 				(unsigned long long)num_echos,
 				avs_echo_latency,
@@ -349,7 +349,7 @@ static void test_smb2_bench_echo_progress(struct tevent_context *ev,
 
 	torture_comment(state->tctx,
 			"%.2f second: "
-			"echo[num/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]\n",
+			"echo[num/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]\n",
 			timeval_elapsed(&state->starttime),
 			(unsigned long long)num_echos,
 			avs_echo_latency,
@@ -800,8 +800,8 @@ static void test_smb2_bench_path_contention_progress(struct tevent_context *ev,
 
 		torture_comment(state->tctx,
 				"%.2f second: "
-				"open[num/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f] "
-				"close[num/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]     \r",
+				"open[num/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f] "
+				"close[num/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]     \r",
 				timeval_elapsed(&state->starttime),
 				(unsigned long long)num_opens,
 				avs_open_latency,
@@ -821,8 +821,8 @@ static void test_smb2_bench_path_contention_progress(struct tevent_context *ev,
 
 	torture_comment(state->tctx,
 			"%.2f second: "
-			"open[num/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f] "
-			"close[num/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]\n",
+			"open[num/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f] "
+			"close[num/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]\n",
 			timeval_elapsed(&state->starttime),
 			(unsigned long long)num_opens,
 			avs_open_latency,
@@ -1199,7 +1199,7 @@ static void test_smb2_bench_read_progress(struct tevent_context *ev,
 
 		torture_comment(state->tctx,
 				"%.2f second: "
-				"read[num/s=%llu,bytes/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]      \r",
+				"read[num/s=%llu;bytes/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]      \r",
 				timeval_elapsed(&state->starttime),
 				(unsigned long long)num_reads,
 				(unsigned long long)num_reads*state->io_size,
@@ -1214,7 +1214,7 @@ static void test_smb2_bench_read_progress(struct tevent_context *ev,
 
 	torture_comment(state->tctx,
 			"%.2f second: "
-			"read[num/s=%llu,bytes/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]\n",
+			"read[num/s=%llu;bytes/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]\n",
 			timeval_elapsed(&state->starttime),
 			(unsigned long long)num_reads,
 			(unsigned long long)num_reads*state->io_size,
@@ -1624,7 +1624,7 @@ static void test_smb2_bench_write_progress(struct tevent_context *ev,
 
 		torture_comment(state->tctx,
 				"%.2f second: "
-				"write[num/s=%llu,bytes/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]      \r",
+				"write[num/s=%llu;bytes/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]      \r",
 				timeval_elapsed(&state->starttime),
 				(unsigned long long)num_writes,
 				(unsigned long long)num_writes*state->io_size,
@@ -1639,7 +1639,7 @@ static void test_smb2_bench_write_progress(struct tevent_context *ev,
 
 	torture_comment(state->tctx,
 			"%.2f second: "
-			"write[num/s=%llu,bytes/s=%llu,avslat=%.6f,minlat=%.6f,maxlat=%.6f]\n",
+			"write[num/s=%llu;bytes/s=%llu;avslat=%.6f;minlat=%.6f;maxlat=%.6f]\n",
 			timeval_elapsed(&state->starttime),
 			(unsigned long long)num_writes,
 			(unsigned long long)num_writes*state->io_size,
