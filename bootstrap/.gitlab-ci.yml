@@ -114,5 +114,5 @@ rocky8:
 centos9s:
   extends: .build_image_template
 
-opensuse155:
+opensuse160:
   extends: .build_image_template
