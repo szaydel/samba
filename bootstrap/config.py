@@ -490,15 +490,6 @@ DEB_DISTS = {
             'landscape-common': '',
         }
     },
-    'ubuntu2004': {
-        'docker_image': 'ubuntu:20.04',
-        'vagrant_box': 'ubuntu/focal64',
-        'replace': {
-            'liburing-dev': '',   # not available
-            'shfmt': '',
-            'mold': '',
-        }
-    },
     'ubuntu2204': {
         'docker_image': 'ubuntu:22.04',
         'vagrant_box': 'ubuntu/jammy64',
