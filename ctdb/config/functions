@@ -681,13 +681,13 @@ ip_addr_add()
 	if $_ipv6; then
 		_ip="${_prefix%/*}"
 		for _x in $(seq 1 10); do
-			ip addr show to "${_ip}/128" | grep -q "tentative" || break
+			ip addr show to "$_ip" | grep -q "tentative" || break
 			sleep 0.5
 		done
 
 		# If the address was a duplicate then it won't be on the
 		# interface so flag an error.
-		_t=$(ip addr show to "${_ip}/128")
+		_t=$(ip addr show to "$_ip")
 		case "$_t" in
 		"")
 			echo "Failed to add ${_prefix} on dev ${_iface}"
@@ -743,11 +743,7 @@ ip_maskbits_iface()
 {
 	_addr="$1"
 
-	case "$_addr" in
-	*:*) _bits=128 ;;
-	*) _bits=32 ;;
-	esac
-	ip addr show to "${_addr}/${_bits}" 2>/dev/null |
+	ip addr show to "$_addr" 2>/dev/null |
 		awk 'NR == 1 { iface = $2; sub(":$", "", iface) ;
 		       sub("@.*", "", iface) }
              $1 ~ /inet/ { mask = $2; sub(".*/", "", mask);
