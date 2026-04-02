@@ -168,7 +168,7 @@ natgw_ensure_leader ()
 natgw_leader_has_changed ()
 {
     if [ -r "$natgw_leader_old" ] ; then
-	read _old_natgwleader <"$natgw_leader_old"
+	read -r _old_natgwleader <"$natgw_leader_old"
     else
 	_old_natgwleader=""
     fi
