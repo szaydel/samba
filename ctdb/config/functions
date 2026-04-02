@@ -696,11 +696,10 @@ add_ip_to_iface()
 	fi
 }
 
-delete_ip_from_iface()
+ip_addr_del()
 {
-	_iface=$1
-	_ip=$2
-	_maskbits=$3
+	_prefix="$1"
+	_iface="$2"
 
 	# This could be set globally for all interfaces but it is probably
 	# better to avoid surprises, so limit it the interfaces where CTDB
@@ -709,10 +708,19 @@ delete_ip_from_iface()
 	# remembering and re-adding secondaries.
 	set_proc "sys/net/ipv4/conf/${_iface}/promote_secondaries" 1
 
-	if ! ip addr del "$_ip/$_maskbits" dev "$_iface"; then
-		echo "Failed to del $_ip on dev $_iface"
+	if ! ip addr del "$_prefix" dev "$_iface"; then
+		echo "Failed to del ${_prefix} on dev ${_iface}"
 		return 1
 	fi
+}
+
+delete_ip_from_iface()
+{
+	_iface=$1
+	_ip=$2
+	_maskbits=$3
+
+	ip_addr_del "${_ip}/${_maskbits}" "$_iface"
 }
 
 # If the given IP is hosted then print 2 items: maskbits and iface
@@ -741,8 +749,10 @@ drop_ip()
 	if [ -n "$1" ]; then
 		_maskbits="$1"
 		_iface="$2"
-		echo "Removing public address $_addr/$_maskbits from device $_iface"
-		delete_ip_from_iface "$_iface" "$_addr" "$_maskbits" >/dev/null 2>&1
+
+		_prefix="${_addr}/${_maskbits}"
+		echo "Removing public address ${_prefix} from device ${_iface}"
+		ip_addr_del "$_prefix" "$_iface" >/dev/null 2>&1
 	fi
 }
 

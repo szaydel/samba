@@ -179,7 +179,7 @@ releaseip)
 	update_my_public_ip_addresses "releaseip" "$ip"
 
 	if [ -n "$iface" ]; then
-		if ! delete_ip_from_iface "$iface" "$ip" "$maskbits"; then
+		if ! ip_addr_del "${ip}/${maskbits}" "$iface"; then
 			ip_unblock "$ip" "$iface"
 			exit 1
 		fi
@@ -225,7 +225,7 @@ updateip)
 	# they will silently fail.
 	if [ -n "$oiface" ]; then
 		ip_block "$ip" "$oiface"
-		delete_ip_from_iface "$oiface" "$ip" "$maskbits" >/dev/null 2>&1
+		ip_addr_del "${ip}/${maskbits}" "$oiface" >/dev/null 2>&1
 	fi
 
 	if ! add_ip_to_iface "$niface" "$ip" "$_maskbits"; then

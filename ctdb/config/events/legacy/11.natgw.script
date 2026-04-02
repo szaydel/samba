@@ -88,8 +88,8 @@ _natgw_clear()
 	_ip="${CTDB_NATGW_PUBLIC_IP%/*}"
 	_maskbits="${CTDB_NATGW_PUBLIC_IP#*/}"
 
-	delete_ip_from_iface \
-		"$CTDB_NATGW_PUBLIC_IFACE" "$_ip" "$_maskbits" >/dev/null 2>&1
+	ip_addr_del \
+		"${_ip}/${_maskbits}" "$CTDB_NATGW_PUBLIC_IFACE" >/dev/null 2>&1
 	for _net_gw in $CTDB_NATGW_STATIC_ROUTES; do
 		_net="${_net_gw%@*}"
 		ip route del "$_net" metric 10 >/dev/null 2>/dev/null
