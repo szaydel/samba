@@ -96,7 +96,7 @@ script_log()
 
 	case "$CTDB_LOGGING" in
 	file:)
-		if [ -n "$*" ] ; then
+		if [ -n "$*" ]; then
 			echo "$*"
 		else
 			cat
@@ -313,7 +313,7 @@ update_my_public_ip_addresses()
 			_pnn=$(ctdb_get_pnn)
 			$CTDB -X ip |
 				awk -F'|' -v pnn="$_pnn" \
-				    '$3 == pnn {print $2}' >"$_new"
+					'$3 == pnn {print $2}' >"$_new"
 			;;
 		esac
 
@@ -993,13 +993,13 @@ failcount_incr()
 	if _failcount_validate_threshold "$_unhealthy_threshold" "$_thing"; then
 		if [ "$_failcount" -ge "$_unhealthy_threshold" ]; then
 			printf 'ERROR: %s: fail count %d >= threshold %d\n' \
-			       "$_thing" \
-			       "$_failcount" \
-			       "$_unhealthy_threshold"
+				"$_thing" \
+				"$_failcount" \
+				"$_unhealthy_threshold"
 			# Only print output when exceeding the
 			# unhealthy threshold
-			if [ "$_failcount" -eq "$_unhealthy_threshold" ] && \
-				   [ -n "$_output" ]; then
+			if [ "$_failcount" -eq "$_unhealthy_threshold" ] &&
+				[ -n "$_output" ]; then
 				echo "$_output"
 			fi
 			exit 1
@@ -1013,9 +1013,9 @@ failcount_incr()
 	fi
 
 	printf 'WARNING: %s: fail count %d >= threshold %d\n' \
-	       "$_thing" \
-	       "$_failcount" \
-	       "$_warn_threshold"
+		"$_thing" \
+		"$_failcount" \
+		"$_warn_threshold"
 	if [ "$_failcount" -eq "$_warn_threshold" ] && [ -n "$_output" ]; then
 		# Only print output when exceeding the warning threshold
 		echo "$_output"
