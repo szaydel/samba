@@ -64,14 +64,14 @@ get_iface_ip_maskbits()
 
 	# Intentional word splitting here
 	# shellcheck disable=SC2046
-	set -- $(ip_maskbits_iface "$ip")
+	set -- $(ip_prefix_iface "$ip")
 	if [ -z "$1" ]; then
 		echo "WARNING: Unable to determine interface for IP ${ip}"
 		iface=""
 		return
 	fi
 
-	maskbits="$1"
+	maskbits="${1#*/}"
 	iface="$2"
 
 	if [ "$iface" != "$_iface_in" ]; then

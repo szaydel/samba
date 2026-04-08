@@ -738,16 +738,20 @@ delete_ip_from_iface()
 	ip_addr_del "${_ip}/${_maskbits}" "$_iface"
 }
 
+# If the given IP is hosted then print 2 items: prefix and iface
+ip_prefix_iface()
+{
+	_addr="$1"
+
+	ip -brief addr show to "$_addr" 2>/dev/null | awk '{ print $3, $1 }'
+}
+
 # If the given IP is hosted then print 2 items: maskbits and iface
 ip_maskbits_iface()
 {
 	_addr="$1"
 
-	ip addr show to "$_addr" 2>/dev/null |
-		awk 'NR == 1 { iface = $2; sub(":$", "", iface) ;
-		       sub("@.*", "", iface) }
-             $1 ~ /inet/ { mask = $2; sub(".*/", "", mask);
-                           print mask, iface }'
+	ip_prefix_iface "$_addr" | sed -e 's|[^/]*/||'
 }
 
 drop_ip()
@@ -756,12 +760,11 @@ drop_ip()
 
 	# Intentional word splitting here
 	# shellcheck disable=SC2046
-	set -- $(ip_maskbits_iface "$_addr")
+	set -- $(ip_prefix_iface "$_addr")
 	if [ -n "$1" ]; then
-		_maskbits="$1"
+		_prefix="$1"
 		_iface="$2"
 
-		_prefix="${_addr}/${_maskbits}"
 		echo "Removing public address ${_prefix} from device ${_iface}"
 		ip_addr_del "$_prefix" "$_iface" >/dev/null 2>&1
 	fi
