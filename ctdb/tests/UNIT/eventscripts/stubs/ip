@@ -145,7 +145,7 @@ ip_link_show()
 
 	if $brief; then
 		printf '%-16s %-14s %-17s %s\n' \
-			"$dev" "$_status" "$_mac" "$_status"
+			"$dev" "$_state" "$_mac" "$_status"
 	else
 		echo "${n:-42}: ${dev}: ${_status} ${_opts}"
 		echo "    link/${_type} ${_mac} brd ${_brd}"
