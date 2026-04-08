@@ -219,10 +219,6 @@ ip_addr_show()
 	secondary=true
 	_to=""
 
-	if $brief; then
-		not_implemented "ip -br addr show in \"$orig_args\""
-	fi
-
 	while [ -n "$1" ]; do
 		case "$1" in
 		dev)
@@ -268,33 +264,61 @@ ip_addr_show()
 	}
 	show_iface()
 	{
-		ip_link_show "$dev"
+		if ! $brief; then
+			ip_link_show "$dev"
+		fi
 
 		nets=$(find "${FAKE_IP_STATE}/addresses" -name "${dev}-*-primary" |
 			sed -e 's@.*/@@' -e "s@${dev}-\(.*\)-primary\$@\1@")
 
+		_primary=""
+		_secondaries=""
 		for net in $nets; do
 			pf="${FAKE_IP_STATE}/addresses/${dev}-${net}-primary"
 			sf="${FAKE_IP_STATE}/addresses/${dev}-${net}-secondary"
 			if $primary && [ -r "$pf" ]; then
 				read -r local scope <"$pf"
 				if [ -z "$_to" ] || [ "${_to%/*}" = "${local%/*}" ]; then
-					calc_brd
-					echo "    inet ${local} ${brd:+brd ${brd} }scope ${scope} ${dev}"
+					_primary="$local"
 				fi
 			fi
 			if $secondary && [ -r "$sf" ]; then
 				while read -r local scope; do
 					if [ -z "$_to" ] || [ "${_to%/*}" = "${local%/*}" ]; then
-						calc_brd
-						echo "    inet ${local} ${brd:+brd }${brd} scope ${scope} secondary ${dev}"
+						_secondaries="${_secondaries}${_secondaries:+ }${local}"
 					fi
 				done <"$sf"
 			fi
-			if [ -z "$_to" ]; then
-				echo "       valid_lft forever preferred_lft forever"
-			fi
 		done
+		if $brief; then
+			# Checking $_primary should be enough, but be defensive
+			if [ -n "$_primary" ] || [ -n "$_secondaries" ]; then
+				_state="UP"
+				if [ "$dev" = "lo" ]; then
+					_state="UNKNOWN"
+				fi
+				printf '%-16s %-14s %s\n' \
+					"$dev" \
+					"$_state" \
+					"${_primary}${_primary:+ }${_secondaries}"
+			fi
+		else
+			if [ -n "$_primary" ]; then
+				local="$_primary"
+				calc_brd
+				cat <<EOF
+    inet ${local} ${brd:+brd ${brd} }scope ${scope} ${dev}
+       valid_lft forever preferred_lft forever
+EOF
+			fi
+			for local in $_secondaries; do
+				calc_brd
+				cat <<EOF
+    inet ${local} ${brd:+brd ${brd} }scope ${scope} secondary ${dev}
+       valid_lft forever preferred_lft forever
+EOF
+			done
+		fi
 	}
 	n=1
 	for dev in $devices; do
