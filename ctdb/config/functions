@@ -649,11 +649,10 @@ get_tcp_connections_for_ip()
 
 ########################################################
 
-add_ip_to_iface()
+ip_addr_add()
 {
-	_iface=$1
-	_ip=$2
-	_maskbits=$3
+	_prefix="$1"
+	_iface="$2"
 
 	# Ensure interface is up
 	ip link set "$_iface" up ||
@@ -667,13 +666,14 @@ add_ip_to_iface()
 
 	# Intentionally unquoted multi-word value here
 	# shellcheck disable=SC2086
-	if ! ip addr add "$_ip/$_maskbits" $_bcast dev "$_iface"; then
-		echo "Failed to add $_ip/$_maskbits on dev $_iface"
+	if ! ip addr add "$_prefix" $_bcast dev "$_iface"; then
+		echo "Failed to add ${_prefix} on dev ${_iface}"
 		return 1
 	fi
 
 	# Wait 5 seconds for IPv6 addresses to stop being tentative...
 	if [ -z "$_bcast" ]; then
+		_ip="${_prefix%/*}"
 		for _x in $(seq 1 10); do
 			ip addr show to "${_ip}/128" | grep -q "tentative" || break
 			sleep 0.5
@@ -684,16 +684,25 @@ add_ip_to_iface()
 		_t=$(ip addr show to "${_ip}/128")
 		case "$_t" in
 		"")
-			echo "Failed to add $_ip/$_maskbits on dev $_iface"
+			echo "Failed to add ${_prefix} on dev ${_iface}"
 			return 1
 			;;
 		*tentative* | *dadfailed*)
-			echo "Failed to add $_ip/$_maskbits on dev $_iface"
-			ip addr del "$_ip/$_maskbits" dev "$_iface"
+			echo "Failed to add ${_prefix} on dev ${_iface}"
+			ip addr del "$_prefix" dev "$_iface"
 			return 1
 			;;
 		esac
 	fi
+}
+
+add_ip_to_iface()
+{
+	_iface=$1
+	_ip=$2
+	_maskbits=$3
+
+	ip_addr_add "${_ip}/${_maskbits}" "$_iface"
 }
 
 ip_addr_del()

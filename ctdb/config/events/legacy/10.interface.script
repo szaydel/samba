@@ -143,7 +143,7 @@ takeip)
 
 	update_my_public_ip_addresses "takeip" "$ip"
 
-	if ! add_ip_to_iface "$iface" "$ip" "$maskbits"; then
+	if ! ip_addr_add "${ip}/${maskbits}" "$iface"; then
 		exit 1
 	fi
 
@@ -228,7 +228,7 @@ updateip)
 		ip_addr_del "${ip}/${maskbits}" "$oiface" >/dev/null 2>&1
 	fi
 
-	if ! add_ip_to_iface "$niface" "$ip" "$_maskbits"; then
+	if ! ip_addr_add "${ip}/${_maskbits}" "$niface"; then
 		ip_unblock "$ip" "$oiface"
 		exit 1
 	fi
