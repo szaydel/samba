@@ -56,7 +56,7 @@ monitor_interfaces()
 }
 
 # Sets: iface, ip, maskbits
-get_iface_ip_maskbits()
+get_ip_prefix_iface()
 {
 	_iface_in="$1"
 	ip="$2"
@@ -71,16 +71,17 @@ get_iface_ip_maskbits()
 		return
 	fi
 
-	maskbits="${1#*/}"
+	prefix="$1"
 	iface="$2"
 
 	if [ "$iface" != "$_iface_in" ]; then
 		printf 'WARNING: Public IP %s hosted on interface %s but VNN says %s\n' \
 			"$ip" "$iface" "$_iface_in"
 	fi
-	if [ "$maskbits" != "$_maskbits_in" ]; then
+	_maskbits="${prefix#*/}"
+	if [ "$_maskbits" != "$_maskbits_in" ]; then
 		printf 'WARNING: Public IP %s has %s bit netmask but VNN says %s\n' \
-			"$ip" "$maskbits" "$_maskbits_in"
+			"$ip" "$_maskbits" "$_maskbits_in"
 	fi
 }
 
@@ -168,7 +169,7 @@ releaseip)
 	# 3) remove the IP from the interface
 	# 4) remove the firewall rule
 	shift
-	get_iface_ip_maskbits "$@"
+	get_ip_prefix_iface "$@"
 
 	if [ -n "$iface" ]; then
 		ip_block "$ip" "$iface"
@@ -179,7 +180,7 @@ releaseip)
 	update_my_public_ip_addresses "releaseip" "$ip"
 
 	if [ -n "$iface" ]; then
-		if ! ip_addr_del "${ip}/${maskbits}" "$iface"; then
+		if ! ip_addr_del "$prefix" "$iface"; then
 			ip_unblock "$ip" "$iface"
 			exit 1
 		fi
@@ -210,7 +211,7 @@ updateip)
 	_ip=$4
 	_maskbits=$5
 
-	get_iface_ip_maskbits "$_oiface" "$_ip" "$_maskbits"
+	get_ip_prefix_iface "$_oiface" "$_ip" "$_maskbits"
 	oiface="$iface"
 
 	# Could check maskbits too.  However, that should never change
@@ -225,9 +226,10 @@ updateip)
 	# they will silently fail.
 	if [ -n "$oiface" ]; then
 		ip_block "$ip" "$oiface"
-		ip_addr_del "${ip}/${maskbits}" "$oiface" >/dev/null 2>&1
+		ip_addr_del "$prefix" "$oiface" >/dev/null 2>&1
 	fi
 
+	# No, this should not be $prefix!
 	if ! ip_addr_add "${ip}/${_maskbits}" "$niface"; then
 		ip_unblock "$ip" "$oiface"
 		exit 1
