@@ -65,25 +65,25 @@ get_iface_ip_maskbits()
 	# Intentional word splitting here
 	# shellcheck disable=SC2046
 	set -- $(ip_maskbits_iface "$ip")
-	if [ -n "$1" ]; then
-		maskbits="$1"
-		iface="$2"
-
-		if [ "$iface" != "$_iface_in" ]; then
-			printf 'WARNING: Public IP %s hosted on interface %s but VNN says %s\n' \
-				"$ip" "$iface" "$_iface_in"
-		fi
-		if [ "$maskbits" != "$_maskbits_in" ]; then
-			printf 'WARNING: Public IP %s has %s bit netmask but VNN says %s\n' \
-				"$ip" "$maskbits" "$_maskbits_in"
-		fi
-	else
+	if [ -z "$1" ]; then
 		if [ "$_iface_in" = "__none__" ]; then
 			echo "WARNING: Unable to determine interface for IP ${ip}"
 			iface="$_iface_in"
 			return
 		fi
 		die "ERROR: Unable to determine interface for IP ${ip}"
+	fi
+
+	maskbits="$1"
+	iface="$2"
+
+	if [ "$iface" != "$_iface_in" ]; then
+		printf 'WARNING: Public IP %s hosted on interface %s but VNN says %s\n' \
+			"$ip" "$iface" "$_iface_in"
+	fi
+	if [ "$maskbits" != "$_maskbits_in" ]; then
+		printf 'WARNING: Public IP %s has %s bit netmask but VNN says %s\n' \
+			"$ip" "$maskbits" "$_maskbits_in"
 	fi
 }
 
