@@ -62,22 +62,40 @@ get_ip_prefix_iface()
 	ip="$2"
 	_maskbits_in="$3"
 
+	# This produces output when $ip is on $_iface_in.  This works
+	# for interface altnames.
+	#
 	# Intentional word splitting here
 	# shellcheck disable=SC2046
-	set -- $(ip_prefix_iface "$ip")
-	if [ -z "$1" ]; then
-		echo "WARNING: Unable to determine interface for IP ${ip}"
-		iface=""
-		return
+	set -- $(ip -brief addr show to "$ip" dev "$_iface_in" 2>/dev/null)
+	if [ -n "$3" ]; then
+		# $ip was on $_iface_in.  Ignore looked up interface
+		# name ($1) and use $_iface_in instead, since it might
+		# be an altname..
+		iface="$_iface_in"
+		prefix="$3"
+	else
+		# $ip was not on $_iface_in.  Try again, without
+		# specifying interface.
+
+		# Intentional word splitting here
+		# shellcheck disable=SC2046
+		set -- $(ip_prefix_iface "$ip")
+		if [ -z "$1" ]; then
+			echo "WARNING: Unable to determine interface for IP ${ip}"
+			iface=""
+			return
+		fi
+
+		prefix="$1"
+		iface="$2"
+
+		if [ "$iface" != "$_iface_in" ]; then
+			printf 'WARNING: Public IP %s hosted on interface %s but VNN says %s\n' \
+				"$ip" "$iface" "$_iface_in"
+		fi
 	fi
 
-	prefix="$1"
-	iface="$2"
-
-	if [ "$iface" != "$_iface_in" ]; then
-		printf 'WARNING: Public IP %s hosted on interface %s but VNN says %s\n' \
-			"$ip" "$iface" "$_iface_in"
-	fi
 	_maskbits="${prefix#*/}"
 	if [ "$_maskbits" != "$_maskbits_in" ]; then
 		printf 'WARNING: Public IP %s has %s bit netmask but VNN says %s\n' \

@@ -14,8 +14,6 @@ ctdb_get_1_public_address |
 		ok_null
 		simple_test_event "takeip" "$altname" "$ip" "$bits"
 
-		ok <<EOF
-WARNING: Public IP ${ip} hosted on interface ${dev} but VNN says ${altname}
-EOF
+		ok_null
 		simple_test_event "releaseip" "$altname" "$ip" "$bits"
 	done
