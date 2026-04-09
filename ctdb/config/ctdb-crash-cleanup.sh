@@ -23,5 +23,5 @@ fi
 drop_all_public_ips 2>&1 | script_log "ctdb-crash-cleanup.sh"
 
 if [ -n "$CTDB_NATGW_PUBLIC_IP" ]; then
-	drop_ip "$CTDB_NATGW_PUBLIC_IP" "ctdb-crash-cleanup.sh"
+	drop_ip "$CTDB_NATGW_PUBLIC_IP" 2>&1 | script_log "ctdb-crash-cleanup.sh"
 fi
