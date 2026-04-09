@@ -198,7 +198,7 @@ updateip)
 	# The steps are:
 	#
 	# 1) firewall this IP, so no new external packets arrive for it
-	# 2) remove the IP from the old interface (and new interface, to be sure)
+	# 2) remove the IP from the old interface
 	# 3) add the IP to the new interface
 	# 4) remove the firewall rule
 	# 5) use ctdb gratarp to propagate the new mac address
@@ -226,7 +226,6 @@ updateip)
 		ip_block "$ip" "$oiface"
 		delete_ip_from_iface "$oiface" "$ip" "$maskbits" >/dev/null 2>&1
 	fi
-	delete_ip_from_iface "$niface" "$ip" "$maskbits" >/dev/null 2>&1
 
 	if ! add_ip_to_iface "$niface" "$ip" "$_maskbits"; then
 		ip_unblock "$ip" "$oiface"
