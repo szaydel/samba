@@ -228,7 +228,7 @@ updateip)
 	fi
 	delete_ip_from_iface "$niface" "$ip" "$maskbits" >/dev/null 2>&1
 
-	if ! add_ip_to_iface "$niface" "$ip" "$maskbits"; then
+	if ! add_ip_to_iface "$niface" "$ip" "$_maskbits"; then
 		ip_unblock "$ip" "$oiface"
 		exit 1
 	fi
