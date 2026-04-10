@@ -119,6 +119,21 @@ static bool defaults_saved = false;
 
 static struct loadparm_global Globals;
 
+/*
+ * Callback to check if a service number is currently in use
+ * by any active connection. Registered by smbd at startup.
+ * When NULL (non-smbd programs), no connections exist so
+ * it is always safe to free services.
+ */
+static bool (*snum_in_use)(struct smbd_server_connection *unused,
+			   int snum) = NULL;
+
+void lp_register_snum_in_use_fn(bool (*fn)(struct smbd_server_connection *,
+					   int))
+{
+	snum_in_use = fn;
+}
+
 /* This is a default service used to prime a services structure */
 static const struct loadparm_service _sDefault =
 {
