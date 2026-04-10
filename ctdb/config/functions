@@ -667,10 +667,10 @@ add_ip_to_iface()
 
 	# Intentionally unquoted multi-word value here
 	# shellcheck disable=SC2086
-	ip addr add "$_ip/$_maskbits" $_bcast dev "$_iface" || {
+	if ! ip addr add "$_ip/$_maskbits" $_bcast dev "$_iface"; then
 		echo "Failed to add $_ip/$_maskbits on dev $_iface"
 		return 1
-	}
+	fi
 
 	# Wait 5 seconds for IPv6 addresses to stop being tentative...
 	if [ -z "$_bcast" ]; then
@@ -709,10 +709,10 @@ delete_ip_from_iface()
 	# remembering and re-adding secondaries.
 	set_proc "sys/net/ipv4/conf/${_iface}/promote_secondaries" 1
 
-	ip addr del "$_ip/$_maskbits" dev "$_iface" || {
+	if ! ip addr del "$_ip/$_maskbits" dev "$_iface"; then
 		echo "Failed to del $_ip on dev $_iface"
 		return 1
-	}
+	fi
 }
 
 # If the given IP is hosted then print 2 items: maskbits and iface

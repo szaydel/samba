@@ -146,9 +146,9 @@ takeip)
 
 	update_my_public_ip_addresses "takeip" "$ip"
 
-	add_ip_to_iface "$iface" "$ip" "$maskbits" || {
+	if ! add_ip_to_iface "$iface" "$ip" "$maskbits"; then
 		exit 1
-	}
+	fi
 
 	# In case a previous "releaseip" for this IP was killed...
 	ip_unblock "$ip" "$iface"
@@ -179,10 +179,10 @@ releaseip)
 
 	update_my_public_ip_addresses "releaseip" "$ip"
 
-	delete_ip_from_iface "$iface" "$ip" "$maskbits" || {
+	if ! delete_ip_from_iface "$iface" "$ip" "$maskbits"; then
 		ip_unblock "$ip" "$iface"
 		exit 1
-	}
+	fi
 
 	ip_unblock "$ip" "$iface"
 
@@ -228,10 +228,10 @@ updateip)
 	fi
 	delete_ip_from_iface "$niface" "$ip" "$maskbits" >/dev/null 2>&1
 
-	add_ip_to_iface "$niface" "$ip" "$maskbits" || {
+	if ! add_ip_to_iface "$niface" "$ip" "$maskbits"; then
 		ip_unblock "$ip" "$oiface"
 		exit 1
-	}
+	fi
 
 	ip_unblock "$ip" "$oiface"
 
