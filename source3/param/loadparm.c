@@ -4471,6 +4471,9 @@ const char *volume_label(TALLOC_CTX *ctx, int snum)
 	if (!*label) {
 		label = lp_servicename(ctx, lp_sub, snum);
 	}
+	if (label == NULL) {
+		label = "";
+	}
 
 	/*
 	 * Volume label can be a max of 32 bytes. Make sure to truncate
