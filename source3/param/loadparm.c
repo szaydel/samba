@@ -4412,6 +4412,15 @@ int lp_servicenumber(const char *pszServiceName)
 		struct timespec last_mod;
 
 		if (!usershare_exists(iService, &last_mod)) {
+			if (snum_in_use != NULL &&
+			    snum_in_use(NULL, iService)) {
+				/*
+				 * Service is in use, don't destroy it.
+				 * The periodic load_usershare_shares()
+				 * sweep will clean it up safely.
+				 */
+				return GLOBAL_SECTION_SNUM;
+			}
 			/* Remove the share security tdb entry for it. */
 			delete_share_security(lp_const_servicename(iService));
 			/* Remove it from the array. */
@@ -4423,6 +4432,15 @@ int lp_servicenumber(const char *pszServiceName)
 		/* Has it been modified ? If so delete and reload. */
 		if (timespec_compare(&ServicePtrs[iService]->usershare_last_mod,
 				     &last_mod) < 0) {
+			if (snum_in_use != NULL &&
+			    snum_in_use(NULL, iService)) {
+				/*
+				 * Service is in use, defer the reload
+				 * to load_usershare_shares() which can
+				 * safely handle in-use services.
+				 */
+				return iService;
+			}
 			/* Remove it from the array. */
 			free_service_byindex(iService);
 			/* and now reload it. */
