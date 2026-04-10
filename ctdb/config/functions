@@ -660,8 +660,14 @@ ip_addr_add()
 
 	# Only need to define broadcast for IPv4
 	case "$_ip" in
-	*:*) _bcast="" ;;
-	*) _bcast="brd +" ;;
+	*:*)
+		_bcast=""
+		_ipv6=true
+		;;
+	*)
+		_bcast="brd +"
+		_ipv6=false
+		;;
 	esac
 
 	# Intentionally unquoted multi-word value here
@@ -672,7 +678,7 @@ ip_addr_add()
 	fi
 
 	# Wait 5 seconds for IPv6 addresses to stop being tentative...
-	if [ -z "$_bcast" ]; then
+	if $_ipv6; then
 		_ip="${_prefix%/*}"
 		for _x in $(seq 1 10); do
 			ip addr show to "${_ip}/128" | grep -q "tentative" || break
