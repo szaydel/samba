@@ -498,7 +498,7 @@ static HRESULT get_folderpath_from_url(TALLOC_CTX *ctx,
 				       const char *url,
 				       char **folderpath)
 {
-	struct es_row_data *row_data = data->row_data;
+	struct es_row_data *row_data = NULL;
 	char *result = NULL;
 	char *slash = NULL;
 	char *tmp = NULL;
