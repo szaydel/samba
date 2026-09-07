@@ -62,6 +62,7 @@ c = libsmb.Conn("127.0.0.1",
 #include "auth/credentials/pycredentials.h"
 #include "trans2.h"
 #include "libsmb/clirap.h"
+#include "lib/adouble.h"
 #include "librpc/rpc/pyrpc_util.h"
 #include "librpc/gen_ndr/ndr_security.h"
 
@@ -3814,6 +3815,11 @@ MODULE_INIT_FUNC(libsmb_samba_cwrapper)
 	ADD_FLAGS(FILE_DIRECTORY_FILE);
 
 	ADD_FLAGS(SMB2_CLOSE_FLAGS_FULL_INFORMATION);
+
+#define ADD_TEXT(val) PyModule_AddObject(m, #val, PyUnicode_FromString(val))
+
+	ADD_TEXT(AFPINFO_STREAM_NAME);
+	ADD_TEXT(AFPRESOURCE_STREAM_NAME);
 
 	return m;
 }
