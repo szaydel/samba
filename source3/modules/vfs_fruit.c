@@ -35,6 +35,7 @@
 #include "string_replace.h"
 #include "hash_inode.h"
 #include "lib/adouble.h"
+#include "lib/afpinfo.h"
 #include "lib/util_macstreams.h"
 #include "source3/smbd/dir.h"
 #include "lib/util/smb_strtox.h"

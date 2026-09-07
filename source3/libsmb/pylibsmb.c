@@ -62,7 +62,7 @@ c = libsmb.Conn("127.0.0.1",
 #include "auth/credentials/pycredentials.h"
 #include "trans2.h"
 #include "libsmb/clirap.h"
-#include "lib/adouble.h"
+#include "lib/afpinfo.h"
 #include "librpc/rpc/pyrpc_util.h"
 #include "librpc/gen_ndr/ndr_security.h"
 

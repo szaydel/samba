@@ -1121,13 +1121,16 @@ bld.SAMBA3_SUBSYSTEM('INIT_SAMR',
 bld.SAMBA3_SUBSYSTEM('LIBLSA',
                      source='lib/lsa.c')
 
+bld.SAMBA3_SUBSYSTEM('AFPINFO',
+                    source='lib/afpinfo.c')
+
 bld.SAMBA3_SUBSYSTEM('ADOUBLE',
                     source='lib/adouble.c',
-                    deps='STRING_REPLACE')
+                    deps='STRING_REPLACE AFPINFO')
 
 bld.SAMBA3_BINARY('test_adouble',
                  source='lib/test_adouble.c',
-                 deps='smbd_base STRING_REPLACE cmocka',
+                 deps='smbd_base STRING_REPLACE AFPINFO cmocka',
                  for_selftest=True)
 
 bld.SAMBA3_SUBSYSTEM('STRING_REPLACE',
