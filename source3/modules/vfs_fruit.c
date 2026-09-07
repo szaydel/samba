@@ -1932,45 +1932,52 @@ static int fruit_renameat(struct vfs_handle_struct *handle,
 		return -1;
 	}
 
+	if ((config->rsrc == FRUIT_RSRC_ADFILE) &&
+	    S_ISREG(smb_fname_src->st.st_ex_mode))
+	{
+		/*
+		 * Rename the AppleDouble sidecar file before the base
+		 * file. If we renamed the base file first and this
+		 * failed, eg because appending the "._" prefix to the
+		 * destination name overflows NAME_MAX, the sidecar
+		 * file would be left behind orphaned under its old
+		 * name.
+		 */
+		rc = adouble_path(talloc_tos(),
+				  smb_fname_src,
+				  &src_adp_smb_fname);
+		if (rc != 0) {
+			goto done;
+		}
+
+		rc = adouble_path(talloc_tos(),
+				  smb_fname_dst,
+				  &dst_adp_smb_fname);
+		if (rc != 0) {
+			goto done;
+		}
+
+		DBG_DEBUG("%s -> %s\n",
+			  smb_fname_str_dbg(src_adp_smb_fname),
+			  smb_fname_str_dbg(dst_adp_smb_fname));
+
+		rc = SMB_VFS_NEXT_RENAMEAT(handle,
+					   src_dirfsp,
+					   src_adp_smb_fname,
+					   dst_dirfsp,
+					   dst_adp_smb_fname,
+					   how);
+		if ((rc != 0) && (errno != ENOENT)) {
+			goto done;
+		}
+	}
+
 	rc = SMB_VFS_NEXT_RENAMEAT(handle,
 				   src_dirfsp,
 				   smb_fname_src,
 				   dst_dirfsp,
 				   smb_fname_dst,
 				   how);
-	if (rc != 0) {
-		return -1;
-	}
-
-	if ((config->rsrc != FRUIT_RSRC_ADFILE) ||
-	    (!S_ISREG(smb_fname_src->st.st_ex_mode)))
-	{
-		return 0;
-	}
-
-	rc = adouble_path(talloc_tos(), smb_fname_src, &src_adp_smb_fname);
-	if (rc != 0) {
-		goto done;
-	}
-
-	rc = adouble_path(talloc_tos(), smb_fname_dst, &dst_adp_smb_fname);
-	if (rc != 0) {
-		goto done;
-	}
-
-	DBG_DEBUG("%s -> %s\n",
-		  smb_fname_str_dbg(src_adp_smb_fname),
-		  smb_fname_str_dbg(dst_adp_smb_fname));
-
-	rc = SMB_VFS_NEXT_RENAMEAT(handle,
-				   src_dirfsp,
-				   src_adp_smb_fname,
-				   dst_dirfsp,
-				   dst_adp_smb_fname,
-				   how);
-	if (errno == ENOENT) {
-		rc = 0;
-	}
 
 done:
 	TALLOC_FREE(src_adp_smb_fname);
