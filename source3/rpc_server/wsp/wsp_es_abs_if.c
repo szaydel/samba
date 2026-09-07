@@ -4154,14 +4154,19 @@ static struct tevent_req *wsp_es_release_cursor_send(
 	}
 
 	query_info = find_query_info(queryidentifier);
-	binding = find_binding_data(query_info, cursorhandle);
 
-	if (binding != NULL && query_info != NULL) {
-		DLIST_REMOVE(query_info->bindings.items, binding);
-		/* #FIXME freeing the binding should result in it's removal from the list */
-		TALLOC_FREE(binding);
-		query_info->bindings.nbindings--;
-		remove_cursors_data(cursorhandle, query_info);
+	if (query_info != NULL) {
+		binding = find_binding_data(query_info, cursorhandle);
+		if (binding != NULL) {
+			DLIST_REMOVE(query_info->bindings.items, binding);
+			/*
+			 * #FIXME freeing the binding should result in
+			 * it's removal from the list
+			 */
+			TALLOC_FREE(binding);
+			query_info->bindings.nbindings--;
+			remove_cursors_data(cursorhandle, query_info);
+		}
 	}
 	state->remaining_cursors = ncursors;
 	tevent_req_done(req);
