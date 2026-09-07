@@ -1430,6 +1430,50 @@ static PyObject *py_unix_mode_to_wire(struct py_cli_state *self,
 	return v;
 }
 
+static PyObject *py_afpinfo_pack(PyObject *module,
+				 PyObject *args,
+				 PyObject *kwds)
+{
+	static const char *kwlist[] = {"finder_info", NULL};
+	TALLOC_CTX *frame = talloc_stackframe();
+	AfpInfo *ai = NULL;
+	char *finder_info = NULL;
+	Py_ssize_t finder_info_len = 0;
+	char buf[AFP_INFO_SIZE];
+	PyObject *result = NULL;
+	bool ok;
+
+	ok = ParseTupleAndKeywords(args,
+				   kwds,
+				   PYARG_BYTES_LEN,
+				   kwlist,
+				   &finder_info,
+				   &finder_info_len);
+	if (!ok) {
+		goto fail;
+	}
+
+	if (finder_info_len != AFP_FinderSize) {
+		PyErr_Format(PyExc_ValueError,
+			     "finder_info must be %d bytes",
+			     AFP_FinderSize);
+		goto fail;
+	}
+
+	ai = afpinfo_new(frame);
+	if (ai == NULL) {
+		result = PyErr_NoMemory();
+		goto fail;
+	}
+	memcpy(ai->afpi_FinderInfo, finder_info, AFP_FinderSize);
+	afpinfo_pack(ai, buf);
+
+	result = PyBytes_FromStringAndSize(buf, sizeof(buf));
+fail:
+	TALLOC_FREE(frame);
+	return result;
+}
+
 static PyObject *py_cli_qfileinfo(struct py_cli_state *self, PyObject *args)
 {
 	TALLOC_CTX *frame = talloc_stackframe();
@@ -3522,6 +3566,14 @@ static PyMethodDef py_libsmb_methods[] = {
 		(PyCFunction)py_wire_mode_to_unix,
 		METH_VARARGS,
 		"Convert posix wire format mode to mode_t",
+	},
+	{
+		"afpinfo_pack",
+		PY_DISCARD_FUNC_SIG(PyCFunction, py_afpinfo_pack),
+		METH_VARARGS | METH_KEYWORDS,
+		"afpinfo_pack(finder_info) -> bytes\n\n"
+		"\t\tPack an AfpInfo structure for the AFP_AfpInfo "
+		"stream with a caller supplied 32 byte Finder Info blob.",
 	},
 	{0},
 };

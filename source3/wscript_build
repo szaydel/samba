@@ -1283,7 +1283,7 @@ bld.SAMBA3_PYTHON('pysmbd',
 pycredentials = 'pycredentials'
 bld.SAMBA3_PYTHON('pylibsmb',
                   source='libsmb/pylibsmb.c',
-                  deps='smbclient samba-credentials %s' % pycredentials,
+                  deps='smbclient samba-credentials AFPINFO %s' % pycredentials,
                   realname='samba/samba3/libsmb_samba_cwrapper.so'
                   )
 
