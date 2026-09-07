@@ -1,3 +1,4 @@
+
 /*
  *  Unix SMB/CIFS implementation.
  *
@@ -1680,6 +1681,7 @@ static enum ndr_err_code store_variant_array_to_buffer(TALLOC_CTX *ctx,
 			DBG_ERR("#FIXME Unhandled variant type %s\n",
 				get_vtype_name(values[i].vtype));
 			TALLOC_FREE(offsets);
+			err = NDR_ERR_BAD_SWITCH;
 			goto out;
 		}
 
