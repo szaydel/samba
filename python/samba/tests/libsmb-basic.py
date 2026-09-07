@@ -263,6 +263,90 @@ class LibsmbTestCase(samba.tests.libsmb.LibsmbTests):
 
         c.deltree("teststreams")
 
+    def test_fruit_rename_long_to_short_name(self):
+        """
+        Test renaming a long src name to a short one where the
+        long name pushes the ._ sidecar file over the ENAMETOOLONG
+        error. This can only happen when there is no ._ sidecar, but
+        the rename will still return ENAMETOOLONG because the
+        pointless attempt to rename the non-existing sidecar
+        fails. Test that the rename hasn't happened at all.
+        """
+        c = libsmb.Conn(self.server_ip, "vfs_fruit", self.lp, self.creds)
+
+        srcname = "s" * 254
+        dstname = "d" * 10
+
+        self.clean_file(c, srcname)
+        self.clean_file(c, dstname)
+
+        try:
+            fnum = c.create(srcname,
+                             DesiredAccess=security.SEC_FILE_ALL,
+                             CreateDisposition=libsmb.FILE_CREATE)
+            c.close(fnum)
+
+            with self.assertRaises(NTSTATUSError) as cm:
+                c.rename(srcname, dstname)
+            self.assertEqual(cm.exception.args[0],
+                              ntstatus.NT_STATUS_OBJECT_NAME_INVALID)
+
+            ls = [f['name'] for f in c.list("\\")]
+            self.assertIn(srcname, ls)
+            self.assertNotIn(dstname, ls)
+        finally:
+            self.clean_file(c, srcname)
+            self.clean_file(c, dstname)
+
+    def create_appledouble(self, c, filename):
+        """Make vfs_fruit create a real "._<filename>" AppleDouble
+        file for filename on disk.
+        """
+        finder_info = b'\x00' * 31 + b'\x01'
+        c.savefile(filename + libsmb.AFPINFO_STREAM_NAME,
+                   libsmb.afpinfo_pack(finder_info))
+
+        rsrc_fnum = c.create(filename + libsmb.AFPRESOURCE_STREAM_NAME,
+                             DesiredAccess=security.SEC_FILE_ALL,
+                             CreateDisposition=libsmb.FILE_OPEN_IF)
+        c.write(rsrc_fnum, b'\x01' * 16, 0)
+        c.close(rsrc_fnum)
+
+    def test_fruit_rename_short_to_long_name(self):
+        """
+        Rename a short file with ._ sidecar file to a long file name
+        driving the ._ sidecar over ENAMETOOLONG. Make sure that the
+        base file rename did not happen at all.
+        """
+        c = libsmb.Conn(self.server_ip, "vfs_fruit", self.lp, self.creds)
+
+        srcname = "s" * 10
+        dstname = "d" * 254
+
+        self.clean_file(c, srcname)
+        self.clean_file(c, dstname)
+
+        try:
+            fnum = c.create(srcname,
+                             DesiredAccess=security.SEC_FILE_ALL,
+                             CreateDisposition=libsmb.FILE_CREATE)
+            c.close(fnum)
+
+            # Force creation of a real "._<srcname>" AppleDouble file
+            self.create_appledouble(c, srcname)
+
+            with self.assertRaises(NTSTATUSError) as cm:
+                c.rename(srcname, dstname)
+            self.assertEqual(cm.exception.args[0],
+                              ntstatus.NT_STATUS_OBJECT_NAME_INVALID)
+
+            ls = [f['name'] for f in c.list("\\")]
+            self.assertIn(srcname, ls)
+            self.assertNotIn(dstname, ls)
+        finally:
+            self.clean_file(c, srcname)
+            self.clean_file(c, dstname)
+
 if __name__ == "__main__":
     import unittest
     unittest.main()
