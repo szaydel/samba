@@ -92,6 +92,7 @@ sub EnumAndBitmapConsts($$$)
 sub FromUnionToPythonFunction($$$$)
 {
 	my ($self, $mem_ctx, $type, $switch, $name) = @_;
+	my $has_default = 0;
 
 	$self->pidl("PyObject *ret;");
 	$self->pidl("");
@@ -101,7 +102,7 @@ sub FromUnionToPythonFunction($$$$)
 
 	foreach my $e (@{$type->{ELEMENTS}}) {
 		$self->pidl("$e->{CASE}:");
-
+		if ($e->{CASE} eq "default") { $has_default = 1; }
 		$self->indent;
 
 		if ($e->{NAME}) {
@@ -110,18 +111,22 @@ sub FromUnionToPythonFunction($$$$)
 			$self->pidl("ret = Py_None;");
 			$self->pidl("Py_INCREF(ret);");
 		}
-
-		$self->pidl("return ret;");
+		$self->pidl("break;");
+		$self->deindent;
 		$self->pidl("");
+	}
 
+	if (!$has_default) {
+		$self->pidl("default:");
+		$self->indent;
+		$self->pidl("PyErr_SetString(PyExc_TypeError, \"unknown union level\");");
+		$self->pidl("ret = NULL;");
 		$self->deindent;
 	}
 
 	$self->deindent;
 	$self->pidl("}");
-
-	$self->pidl("PyErr_SetString(PyExc_TypeError, \"unknown union level\");");
-	$self->pidl("return NULL;");
+	$self->pidl("return ret;");
 }
 
 sub FromPythonToUnionFunction($$$$$)
