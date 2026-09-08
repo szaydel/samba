@@ -268,9 +268,8 @@ class LibsmbTestCase(samba.tests.libsmb.LibsmbTests):
         Test renaming a long src name to a short one where the
         long name pushes the ._ sidecar file over the ENAMETOOLONG
         error. This can only happen when there is no ._ sidecar, but
-        the rename will still return ENAMETOOLONG because the
-        pointless attempt to rename the non-existing sidecar
-        fails. Test that the rename hasn't happened at all.
+        the rename syscall will still return ENAMETOOLONG. Handle that
+        properly for the src filename to allow the base rename.
         """
         c = libsmb.Conn(self.server_ip, "vfs_fruit", self.lp, self.creds)
 
@@ -286,14 +285,11 @@ class LibsmbTestCase(samba.tests.libsmb.LibsmbTests):
                              CreateDisposition=libsmb.FILE_CREATE)
             c.close(fnum)
 
-            with self.assertRaises(NTSTATUSError) as cm:
-                c.rename(srcname, dstname)
-            self.assertEqual(cm.exception.args[0],
-                              ntstatus.NT_STATUS_OBJECT_NAME_INVALID)
+            c.rename(srcname, dstname)
 
             ls = [f['name'] for f in c.list("\\")]
-            self.assertIn(srcname, ls)
-            self.assertNotIn(dstname, ls)
+            self.assertNotIn(srcname, ls)
+            self.assertIn(dstname, ls)
         finally:
             self.clean_file(c, srcname)
             self.clean_file(c, dstname)
