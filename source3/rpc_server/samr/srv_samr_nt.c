@@ -723,6 +723,11 @@ NTSTATUS _samr_SetSecurity(struct pipes_struct *p,
 		return NT_STATUS_INVALID_HANDLE;
 	}
 
+	if (r->in.sdbuf->sd == NULL || r->in.sdbuf->sd->dacl == NULL) {
+		TALLOC_FREE(sampass);
+		return NT_STATUS_INVALID_SECURITY_DESCR;
+	}
+
 	dacl = r->in.sdbuf->sd->dacl;
 	for (i=0; i < dacl->num_aces; i++) {
 		if (dom_sid_equal(&uinfo->sid, &dacl->aces[i].trustee)) {
